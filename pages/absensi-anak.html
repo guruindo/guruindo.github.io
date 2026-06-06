@@ -84,7 +84,43 @@
       border-radius: var(--radius-besar); height: 50px; margin-bottom: 8px;
     }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-  </style>
+
+    /* ── Sheet ajukan ── */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.38); z-index: 100; }
+    .sheet {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-radius: 20px 20px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      z-index: 101; max-width: 480px; margin: 0 auto;
+      max-height: 88vh; overflow-y: auto;
+    }
+    .sheet-handle { width: 36px; height: 4px; background: #E5E7EB; border-radius: 2px; margin: 0 auto 16px; }
+    .sheet-judul { font-size: 16px; font-weight: 700; color: var(--teks-utama); margin-bottom: 4px; }
+    .sheet-sub { font-size: 13px; color: var(--teks-muted); margin-bottom: 16px; }
+    .pilih-jenis {
+      flex: 1; padding: 12px; border-radius: var(--radius-sedang);
+      border: 1.5px solid var(--garis); background: white; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--teks-muted);
+      font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent;
+    }
+    .pilih-jenis.aktif { border-color: var(--teal); background: var(--teal-muda); color: var(--teal-gelap); }
+
+    /* ── Kartu riwayat pengajuan ── */
+    .kartu-pengajuan {
+      background: white; border-radius: var(--radius-besar);
+      padding: 13px 16px; margin-bottom: 8px;
+    }
+    .pj-baris1 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .pj-jenis { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .pj-tgl { font-size: 12px; color: var(--teks-muted); margin-top: 3px; }
+    .pj-alasan { font-size: 13px; color: var(--teks-utama); margin-top: 6px; line-height: 1.45; }
+    .pj-catatan { font-size: 12px; color: var(--teks-muted); margin-top: 6px; font-style: italic; }
+    .pil-status {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; flex-shrink: 0;
+    }
+    .ps-menunggu  { background: #FEF3C7; color: #92400E; }
+    .ps-disetujui { background: #E6F6EF; color: #1D9E75; }
+    .ps-ditolak   { background: #FDE8E8; color: #DC2626; }</style>
 </head>
 <body>
 
@@ -137,6 +173,54 @@
     <button class="btn btn-teal" id="btn-coba-lagi">Coba Lagi</button>
   </div>
 
+  <!-- ── Pengajuan izin/sakit (tampil setelah data anak termuat) ── -->
+  <div id="blok-ajukan" style="display:none; margin-top:22px">
+    <button class="btn btn-teal btn-blok" id="btn-buka-ajukan">📝 Ajukan izin / sakit</button>
+    <div class="seksi-judul" style="margin-top:22px">Riwayat Pengajuan</div>
+    <div id="el-pengajuan"></div>
+    <div id="pengajuan-kosong" style="font-size:13px;color:var(--teks-muted);
+      text-align:center;padding:14px 0">Belum ada pengajuan.</div>
+  </div>
+
+</div>
+
+<!-- ── Sheet form ajukan ── -->
+<div class="overlay" id="ov-ajukan"></div>
+<div class="sheet" id="sheet-ajukan">
+  <div class="sheet-handle"></div>
+  <div class="sheet-judul">Ajukan izin / sakit</div>
+  <div class="sheet-sub">Kabari guru kalau anak berhalangan hadir.</div>
+
+  <div class="input-grup">
+    <label class="input-label">Jenis</label>
+    <div style="display:flex;gap:8px">
+      <button class="pilih-jenis aktif" data-jenis="izin" type="button">📝 Izin</button>
+      <button class="pilih-jenis" data-jenis="sakit" type="button">🤒 Sakit</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <div class="input-grup" style="flex:1">
+      <label class="input-label">Dari tanggal</label>
+      <input class="input-field" type="date" id="aj-dari">
+    </div>
+    <div class="input-grup" style="flex:1">
+      <label class="input-label">Sampai tanggal</label>
+      <input class="input-field" type="date" id="aj-sampai">
+    </div>
+  </div>
+
+  <div class="input-grup" style="margin-top:14px">
+    <label class="input-label">Alasan</label>
+    <textarea class="input-field" id="aj-alasan" rows="3"
+      placeholder="Contoh: demam, kontrol ke dokter, acara keluarga..."
+      style="resize:none;font-family:'Nunito',sans-serif"></textarea>
+  </div>
+
+  <div class="error-kotak" id="aj-err" style="margin-top:10px"></div>
+
+  <button class="btn btn-teal btn-blok" id="btn-kirim-ajukan" style="margin-top:14px">Kirim pengajuan</button>
+  <button class="btn btn-ghost btn-blok" id="btn-batal-ajukan" style="margin-top:8px">Batal</button>
 </div>
 
 <script type="module">
@@ -205,6 +289,10 @@
     document.getElementById('el-nama-anak').textContent = murid.nama
     document.getElementById('el-sub-anak').textContent  = murid.kelas?.nama_kelas || ''
 
+    // Anak valid -> tampilkan blok pengajuan & muat riwayatnya
+    document.getElementById('blok-ajukan').style.display = 'block'
+    muatPengajuan()
+
     // Rekap kehadiran — fungsi sudah ada di tahap2-absensi.sql
     const { data: rekap, error: errRekap } = await supabase
       .rpc('rekap_absensi_murid', { p_murid_id: muridId })
@@ -242,6 +330,133 @@
   }
 
   document.getElementById('btn-coba-lagi').addEventListener('click', muat)
+
+  // ════════ PENGAJUAN IZIN/SAKIT ════════
+  const PJ_STATUS = {
+    menunggu:  { teks: 'Menunggu',  kelas: 'ps-menunggu'  },
+    disetujui: { teks: 'Disetujui', kelas: 'ps-disetujui' },
+    ditolak:   { teks: 'Ditolak',   kelas: 'ps-ditolak'   },
+  }
+  const PJ_JENIS = { izin: '📝 Izin', sakit: '🤒 Sakit' }
+
+  function rentangTeks(dari, sampai) {
+    if (dari === sampai) return formatTanggal(dari)
+    return formatTanggal(dari) + ' s/d ' + formatTanggal(sampai)
+  }
+
+  async function muatPengajuan() {
+    const { data, error } = await supabase
+      .rpc('daftar_pengajuan_anak', { p_murid_id: muridId })
+    const wrap   = document.getElementById('el-pengajuan')
+    const kosong = document.getElementById('pengajuan-kosong')
+    if (error) { wrap.innerHTML = ''; kosong.style.display = 'block'; return }
+    if (!data || data.length === 0) { wrap.innerHTML = ''; kosong.style.display = 'block'; return }
+    kosong.style.display = 'none'
+    wrap.innerHTML = ''
+    data.forEach(p => {
+      const s = PJ_STATUS[p.status] || PJ_STATUS.menunggu
+      const el = document.createElement('div')
+      el.className = 'kartu-pengajuan'
+      el.innerHTML = `
+        <div class="pj-baris1">
+          <div>
+            <div class="pj-jenis">${PJ_JENIS[p.jenis_izin] || p.jenis_izin}</div>
+            <div class="pj-tgl">${rentangTeks(p.tgl_dari, p.tgl_sampai)}</div>
+          </div>
+          <span class="pil-status ${s.kelas}">${s.teks}</span>
+        </div>
+        <div class="pj-alasan">${p.alasan}</div>
+        ${p.catatan_guru ? `<div class="pj-catatan">Catatan guru: ${p.catatan_guru}</div>` : ''}
+      `
+      wrap.appendChild(el)
+    })
+  }
+
+  // ── Sheet form ──
+  const ovAjukan    = document.getElementById('ov-ajukan')
+  const sheetAjukan = document.getElementById('sheet-ajukan')
+  let jenisDipilih  = 'izin'
+
+  function hariIniISO() {
+    const d = new Date()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${d.getFullYear()}-${mm}-${dd}`
+  }
+
+  function bukaAjukan() {
+    const ini = hariIniISO()
+    document.getElementById('aj-dari').value   = ini
+    document.getElementById('aj-dari').min     = ini
+    document.getElementById('aj-sampai').value = ini
+    document.getElementById('aj-sampai').min   = ini
+    document.getElementById('aj-alasan').value = ''
+    document.getElementById('aj-err').classList.remove('tampil')
+    jenisDipilih = 'izin'
+    document.querySelectorAll('.pilih-jenis').forEach(b =>
+      b.classList.toggle('aktif', b.getAttribute('data-jenis') === 'izin'))
+    ovAjukan.style.display = 'block'
+    sheetAjukan.style.display = 'block'
+  }
+  function tutupAjukan() {
+    ovAjukan.style.display = 'none'
+    sheetAjukan.style.display = 'none'
+  }
+
+  document.getElementById('btn-buka-ajukan').addEventListener('click', bukaAjukan)
+  document.getElementById('btn-batal-ajukan').addEventListener('click', tutupAjukan)
+  ovAjukan.addEventListener('click', tutupAjukan)
+
+  document.querySelectorAll('.pilih-jenis').forEach(btn => {
+    btn.addEventListener('click', () => {
+      jenisDipilih = btn.getAttribute('data-jenis')
+      document.querySelectorAll('.pilih-jenis').forEach(b =>
+        b.classList.toggle('aktif', b === btn))
+    })
+  })
+
+  // Jaga: sampai >= dari
+  document.getElementById('aj-dari').addEventListener('change', (e) => {
+    const sampai = document.getElementById('aj-sampai')
+    sampai.min = e.target.value
+    if (sampai.value < e.target.value) sampai.value = e.target.value
+  })
+
+  function ajErr(pesan) {
+    const el = document.getElementById('aj-err')
+    el.textContent = pesan
+    el.classList.add('tampil')
+  }
+
+  document.getElementById('btn-kirim-ajukan').addEventListener('click', async () => {
+    const dari   = document.getElementById('aj-dari').value
+    const sampai = document.getElementById('aj-sampai').value
+    const alasan = document.getElementById('aj-alasan').value.trim()
+    document.getElementById('aj-err').classList.remove('tampil')
+
+    if (!dari || !sampai) return ajErr('Tanggalnya belum lengkap, Pak/Bu.')
+    if (sampai < dari)    return ajErr('Tanggal selesai jangan sebelum tanggal mulai.')
+    if (!alasan)          return ajErr('Mohon isi alasannya dulu ya.')
+
+    const btn = document.getElementById('btn-kirim-ajukan')
+    btn.disabled = true; btn.textContent = 'Mengirim...'
+    const { error } = await supabase.rpc('ajukan_izin', {
+      p_murid_id: muridId, p_jenis: jenisDipilih,
+      p_tgl_dari: dari, p_tgl_sampai: sampai, p_alasan: alasan
+    })
+    btn.disabled = false; btn.textContent = 'Kirim pengajuan'
+
+    if (error) {
+      const m = error.message || ''
+      if (m.includes('beririsan')) return ajErr('Sudah ada pengajuan menunggu untuk tanggal itu.')
+      if (m.includes('sudah lewat')) return ajErr('Tidak bisa untuk tanggal yang sudah lewat.')
+      return ajErr('Gagal mengirim. Coba lagi ya?')
+    }
+    tutupAjukan()
+    toast('Pengajuan terkirim, menunggu guru 🙏', 'sukses')
+    muatPengajuan()
+  })
+
   muat()
 
   })()

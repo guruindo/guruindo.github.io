@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1D9E75">
+  <title>GuruIndo — Kehadiran Anak</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    /* ── Header teal dengan tombol kembali ── */
+    .header {
+      background: var(--teal);
+      padding: 48px max(20px, calc((100% - 480px) / 2)) 20px;
+      padding-top: calc(48px + env(safe-area-inset-top));
+    }
+    .header-baris { display: flex; align-items: center; gap: 12px; }
+    .btn-kembali {
+      width: 38px; height: 38px; flex-shrink: 0;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .judul-anak { color: white; font-size: 18px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub-anak { color: rgba(255,255,255,0.75); font-size: 13px; margin-top: 2px; }
+
+    /* ── Konten ── */
+    .konten {
+      padding: 16px;
+      padding-bottom: calc(32px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+    }
+
+    /* ── Ringkasan hitung ── */
+    .ringkasan {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 18px;
+    }
+    .kotak-hitung {
+      background: white; border-radius: var(--radius-besar);
+      padding: 12px 6px; text-align: center;
+    }
+    .angka-hitung { font-size: 20px; font-weight: 600; font-family: 'Poppins', sans-serif; }
+    .label-hitung { font-size: 11px; color: var(--teks-muted); margin-top: 2px; }
+    .c-hadir { color: #1D9E75; }
+    .c-izin  { color: #2563EB; }
+    .c-sakit { color: #D97706; }
+    .c-alpa  { color: #DC2626; }
+
+    .seksi-judul {
+      font-size: 13px; font-weight: 600; color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 0 10px;
+    }
+
+    /* ── Baris riwayat ── */
+    .baris-hari {
+      background: white; border-radius: var(--radius-besar);
+      padding: 13px 16px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .tgl-box { flex: 1; min-width: 0; }
+    .tgl-utama { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .tgl-catatan { font-size: 12px; color: var(--teks-muted); margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pil {
+      font-size: 12px; font-weight: 600; padding: 4px 12px;
+      border-radius: 999px; flex-shrink: 0;
+    }
+    .pil-hadir { background: #E6F6EF; color: #1D9E75; }
+    .pil-izin  { background: #E8F0FE; color: #2563EB; }
+    .pil-sakit { background: #FEF3E2; color: #D97706; }
+    .pil-alpa  { background: #FDE8E8; color: #DC2626; }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite;
+      border-radius: var(--radius-besar); height: 50px; margin-bottom: 8px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-baris">
+    <button class="btn-kembali" onclick="window.location.href='beranda-ortu.html'" aria-label="Kembali">‹</button>
+    <div style="min-width:0">
+      <div class="judul-anak" id="el-nama-anak">Memuat...</div>
+      <div class="sub-anak" id="el-sub-anak">&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── KONTEN ── -->
+<div class="konten">
+
+  <!-- Skeleton -->
+  <div id="el-loading">
+    <div class="skeleton" style="height:64px;margin-bottom:18px"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- Isi (diisi JS) -->
+  <div id="el-isi" style="display:none">
+    <div class="ringkasan">
+      <div class="kotak-hitung"><div class="angka-hitung c-hadir" id="n-hadir">0</div><div class="label-hitung">Hadir</div></div>
+      <div class="kotak-hitung"><div class="angka-hitung c-izin"  id="n-izin">0</div><div class="label-hitung">Izin</div></div>
+      <div class="kotak-hitung"><div class="angka-hitung c-sakit" id="n-sakit">0</div><div class="label-hitung">Sakit</div></div>
+      <div class="kotak-hitung"><div class="angka-hitung c-alpa"  id="n-alpa">0</div><div class="label-hitung">Alpa</div></div>
+    </div>
+    <div class="seksi-judul">Riwayat Kehadiran</div>
+    <div id="el-daftar"></div>
+  </div>
+
+  <!-- Empty -->
+  <div id="el-kosong" class="state-kosong" style="display:none">
+    <div class="state-ikon">🗓️</div>
+    <div class="state-judul">Belum ada catatan kehadiran</div>
+    <div class="state-teks">Kehadiran akan muncul di sini setelah guru menutup absensi harian.</div>
+  </div>
+
+  <!-- Error -->
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-ikon">😕</div>
+    <div class="state-judul">Tidak bisa memuat</div>
+    <div class="state-teks">Cek koneksi internetmu, lalu coba lagi.</div>
+    <button class="btn btn-teal" id="btn-coba-lagi">Coba Lagi</button>
+  </div>
+
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  // ── 1. Cek sesi ──
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  // ── 2. Ambil murid_id dari query ──
+  const params  = new URLSearchParams(window.location.search)
+  const muridId = params.get('murid')
+  if (!muridId) { window.location.href = 'beranda-ortu.html'; return }
+
+  const elLoading = document.getElementById('el-loading')
+  const elIsi     = document.getElementById('el-isi')
+  const elKosong  = document.getElementById('el-kosong')
+  const elError   = document.getElementById('el-error')
+
+  function tampilkan(yang) {
+    elLoading.style.display = yang === 'loading' ? 'block' : 'none'
+    elIsi.style.display     = yang === 'isi'     ? 'block' : 'none'
+    elKosong.style.display  = yang === 'kosong'  ? 'block' : 'none'
+    elError.style.display   = yang === 'error'   ? 'block' : 'none'
+  }
+
+  const labelStatus = {
+    hadir: { teks: 'Hadir', kelas: 'pil-hadir' },
+    izin:  { teks: 'Izin',  kelas: 'pil-izin'  },
+    sakit: { teks: 'Sakit', kelas: 'pil-sakit' },
+    alpa:  { teks: 'Alpa',  kelas: 'pil-alpa'  },
+  }
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+  const namaHari  = ['Min','Sen','Sel','Rab','Kam','Jum','Sab']
+
+  function formatTanggal(isoStr) {
+    // isoStr = 'YYYY-MM-DD' (date dari Postgres). Parse manual agar tidak
+    // tergeser timezone browser.
+    const [y, m, d] = isoStr.split('-').map(Number)
+    const tgl = new Date(y, m - 1, d)
+    return `${namaHari[tgl.getDay()]}, ${d} ${namaBulan[m - 1]} ${y}`
+  }
+
+  async function muat() {
+    tampilkan('loading')
+
+    // Nama anak (RLS: ortu hanya bisa lihat anaknya sendiri)
+    const { data: murid, error: errMurid } = await supabase
+      .from('murid')
+      .select('nama, kelas ( nama_kelas )')
+      .eq('id', muridId)
+      .maybeSingle()
+
+    if (errMurid) { tampilkan('error'); return }
+    if (!murid) {
+      // Tidak berhak / anak tak terhubung
+      tampilkan('kosong')
+      document.getElementById('el-nama-anak').textContent = 'Anak'
+      document.getElementById('el-sub-anak').textContent  = ''
+      return
+    }
+
+    document.getElementById('el-nama-anak').textContent = murid.nama
+    document.getElementById('el-sub-anak').textContent  = murid.kelas?.nama_kelas || ''
+
+    // Rekap kehadiran — fungsi sudah ada di tahap2-absensi.sql
+    const { data: rekap, error: errRekap } = await supabase
+      .rpc('rekap_absensi_murid', { p_murid_id: muridId })
+
+    if (errRekap) { tampilkan('error'); return }
+
+    if (!rekap || rekap.length === 0) { tampilkan('kosong'); return }
+
+    // Hitung ringkasan
+    const hitung = { hadir: 0, izin: 0, sakit: 0, alpa: 0 }
+    rekap.forEach(r => { if (hitung[r.status] !== undefined) hitung[r.status]++ })
+    document.getElementById('n-hadir').textContent = hitung.hadir
+    document.getElementById('n-izin').textContent  = hitung.izin
+    document.getElementById('n-sakit').textContent = hitung.sakit
+    document.getElementById('n-alpa').textContent  = hitung.alpa
+
+    // Daftar baris
+    const kontainer = document.getElementById('el-daftar')
+    kontainer.innerHTML = ''
+    rekap.forEach(r => {
+      const info = labelStatus[r.status] || { teks: r.status, kelas: 'pil-hadir' }
+      const el = document.createElement('div')
+      el.className = 'baris-hari'
+      el.innerHTML = `
+        <div class="tgl-box">
+          <div class="tgl-utama">${formatTanggal(r.tanggal)}</div>
+          ${r.catatan ? `<div class="tgl-catatan">📝 ${r.catatan}</div>` : ''}
+        </div>
+        <span class="pil ${info.kelas}">${info.teks}</span>
+      `
+      kontainer.appendChild(el)
+    })
+
+    tampilkan('isi')
+  }
+
+  document.getElementById('btn-coba-lagi').addEventListener('click', muat)
+  muat()
+
+  })()
+</script>
+</body>
+</html>

@@ -92,22 +92,28 @@
   <div id="fdaftar" style="display:none">
     <div class="form-grup">
       <div class="input-grup">
-        <label class="input-label">Nama lengkap</label>
+        <label class="input-label">Siapa nama Bapak/Ibu?</label>
         <input class="input-field" type="text" id="d-nama"
-          placeholder="Nama kamu" autocomplete="name">
+          placeholder="Tulis nama di sini" autocomplete="name">
       </div>
       <div class="input-grup">
-        <label class="input-label">Email</label>
+        <label class="input-label">Email Bapak/Ibu</label>
         <input class="input-field" type="email" id="d-email"
           placeholder="email@contoh.com" autocomplete="email">
+        <div style="font-size:12px; color:var(--teks-muted); margin-top:6px; line-height:1.5">
+          Email yang sudah ada di HP juga boleh dipakai.
+        </div>
       </div>
       <div class="input-grup">
-        <label class="input-label">Kata sandi</label>
+        <label class="input-label">Buat kata sandi</label>
         <input class="input-field" type="password" id="d-sandi"
-          placeholder="Minimal 8 karakter" autocomplete="new-password">
+          placeholder="Minimal 8 huruf/angka" autocomplete="new-password">
+        <div style="font-size:12px; color:var(--teks-muted); margin-top:6px; line-height:1.5">
+          Pakai yang mudah Bapak/Ibu ingat, ya.
+        </div>
       </div>
       <button class="btn btn-utama btn-blok" style="margin-top:4px"
-        onclick="daftar()">Buat akun</button>
+        onclick="daftar()">Buat akun saya</button>
     </div>
   </div>
 
@@ -166,9 +172,9 @@
     const sandi = document.getElementById('d-sandi').value
     clearErr()
 
-    if (!nama)          return err('Nama lengkap belum diisi nih.')
-    if (!email)         return err('Email belum diisi nih.')
-    if (sandi.length < 8) return err('Kata sandi minimal 8 karakter ya.')
+    if (!nama)          return err('Namanya belum diisi nih, Pak/Bu.')
+    if (!email)         return err('Emailnya belum diisi nih, Pak/Bu.')
+    if (sandi.length < 8) return err('Kata sandi minimal 8 huruf/angka ya.')
 
     loading(true, 'Membuat akun...')
     const { data, error } = await supabase.auth.signUp({

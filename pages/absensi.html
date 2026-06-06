@@ -126,6 +126,22 @@
     }
     .opsi-status:active { transform: scale(0.98); }
     .opsi-ikon { font-size: 20px; }
+
+    /* Kartu pengajuan ortu (sisi guru) */
+    .kartu-pj {
+      background: white; border-radius: var(--radius-sedang);
+      padding: 13px 14px; margin-bottom: 8px;
+      border-left: 3px solid #F59E0B;
+    }
+    .pj-atas { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .pj-nama { font-size: 14px; font-weight: 700; color: var(--teks-utama); }
+    .pj-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; flex-shrink: 0; }
+    .pjb-izin  { background: #DBEAFE; color: #1E40AF; }
+    .pjb-sakit { background: #FEF3C7; color: #92400E; }
+    .pj-rentang { font-size: 12px; color: var(--teks-muted); margin-top: 4px; }
+    .pj-alasan2 { font-size: 13px; color: var(--teks-utama); margin-top: 6px; line-height: 1.45; }
+    .pj-tombol { display: flex; gap: 8px; margin-top: 10px; }
+    .pj-tombol .btn { flex: 1; padding: 9px; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -164,6 +180,12 @@
     <div class="banner-tgl" id="banner-tgl">—</div>
     <div class="banner-sub" id="banner-sub">Tandai hanya yang tidak masuk. Sisanya otomatis hadir.</div>
     <span class="banner-status st-belum" id="banner-status">Belum dikunci</span>
+  </div>
+
+  <!-- Pengajuan izin/sakit dari ortu (menunggu) -->
+  <div id="wrap-pengajuan" style="display:none;margin-bottom:14px">
+    <div class="seksi-judul">Pengajuan dari Orang Tua</div>
+    <div id="daftar-pengajuan"></div>
   </div>
 
   <!-- Pesan hari Minggu / libur -->
@@ -325,6 +347,7 @@
     document.getElementById('banner-tgl').textContent = tglIndo(tgl)
 
     renderKeadaan()
+    muatPengajuan()
   }
 
   function renderKeadaan() {
@@ -529,6 +552,69 @@
     if (error) { toast('Gagal: ' + (error.message || 'coba lagi'), 'error'); return }
     muatAbsen()
   })
+
+  // ════════ PENGAJUAN DARI ORTU (sisi guru) ════════
+  function fmtTglPendek(isoStr) {
+    const bln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+    const [y, m, d] = isoStr.split('-').map(Number)
+    return `${d} ${bln[m - 1]} ${y}`
+  }
+  function rentangPendek(dari, sampai) {
+    return dari === sampai ? fmtTglPendek(dari) : fmtTglPendek(dari) + ' s/d ' + fmtTglPendek(sampai)
+  }
+
+  async function muatPengajuan() {
+    const wrap = document.getElementById('wrap-pengajuan')
+    const list = document.getElementById('daftar-pengajuan')
+    const { data, error } = await supabase
+      .rpc('daftar_pengajuan_kelas', { p_kelas_id: kelasId })
+    if (error || !data || data.length === 0) { wrap.style.display = 'none'; return }
+
+    wrap.style.display = ''
+    list.innerHTML = ''
+    data.forEach(p => {
+      const badgeKelas = p.jenis_izin === 'sakit' ? 'pjb-sakit' : 'pjb-izin'
+      const badgeTeks  = p.jenis_izin === 'sakit' ? '🤒 Sakit' : '📝 Izin'
+      const el = document.createElement('div')
+      el.className = 'kartu-pj'
+      el.innerHTML = `
+        <div class="pj-atas">
+          <div class="pj-nama">${p.nama_murid}</div>
+          <span class="pj-badge ${badgeKelas}">${badgeTeks}</span>
+        </div>
+        <div class="pj-rentang">📅 ${rentangPendek(p.tgl_dari, p.tgl_sampai)}</div>
+        <div class="pj-alasan2">${p.alasan}</div>
+        <div class="pj-tombol">
+          <button class="btn btn-outline btn-tolak">Tolak</button>
+          <button class="btn btn-teal btn-setuju">Setujui</button>
+        </div>`
+      el.querySelector('.btn-setuju').addEventListener('click', () => putus(p, true))
+      el.querySelector('.btn-tolak').addEventListener('click', () => putus(p, false))
+      list.appendChild(el)
+    })
+  }
+
+  async function putus(p, setujui) {
+    const aksi = setujui ? 'Setujui' : 'Tolak'
+    const ok = await konfirmasi({
+      judul: `${aksi} pengajuan?`,
+      pesan: setujui
+        ? `${p.nama_murid} akan tercatat ${p.jenis_izin} pada ${rentangPendek(p.tgl_dari, p.tgl_sampai)}. Hari Minggu/libur dilewati.`
+        : `Pengajuan ${p.jenis_izin} ${p.nama_murid} akan ditolak. Orang tua akan diberi tahu.`,
+      labelOk: aksi
+    })
+    if (!ok) return
+    const { error } = await supabase.rpc('putus_pengajuan', {
+      p_pengajuan_id: p.id, p_setujui: setujui, p_catatan: null
+    })
+    if (error) {
+      toast('Gagal: ' + (error.message || 'coba lagi'), 'error')
+      return
+    }
+    toast(setujui ? 'Pengajuan disetujui ✓' : 'Pengajuan ditolak', 'sukses')
+    // Muat ulang: pengajuan hilang dari daftar + absensi ikut terupdate bila disetujui
+    muatAbsen()
+  }
 
   // ── Router halaman ──
   if (kelasId) {

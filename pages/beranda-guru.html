@@ -254,7 +254,7 @@
     <span class="nav-label">Pengumuman</span>
   </button>
   <button class="nav-item" onclick="window.location.href='absensi.html'">
-    <span class="nav-icon">✅</span>
+    <span class="nav-icon" style="position:relative">✅<span id="badge-pengajuan" style="display:none;position:absolute;top:-6px;right:-10px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:700;line-height:16px;text-align:center;font-family:'Nunito',sans-serif">0</span></span>
     <span class="nav-label">Absensi</span>
   </button>
   <button class="nav-item" onclick="window.location.href='catatan-list.html'">
@@ -416,6 +416,16 @@
   document.getElementById('btn-avatar').addEventListener('click', bukaPanel)
   document.getElementById('btn-nav-profil').addEventListener('click', bukaPanel)
   document.getElementById('el-overlay').addEventListener('click', tutupPanel)
+
+  // Badge pengajuan izin/sakit yang menunggu (di ikon Absensi)
+  ;(async () => {
+    const { data, error } = await supabase.rpc('pengajuan_menunggu_guru')
+    if (error) return
+    const n = Number(data) || 0
+    const badge = document.getElementById('badge-pengajuan')
+    if (n > 0) { badge.textContent = n > 9 ? '9+' : String(n); badge.style.display = 'block' }
+    else { badge.style.display = 'none' }
+  })()
 
   // Keluar
   document.getElementById('btn-keluar').addEventListener('click', async () => {

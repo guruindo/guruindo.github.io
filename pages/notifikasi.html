@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1D9E75">
+  <title>GuruIndo — Notifikasi</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    .header {
+      background: var(--teal);
+      padding: 48px max(20px, calc((100% - 480px) / 2)) 20px;
+      padding-top: calc(48px + env(safe-area-inset-top));
+    }
+    .header-baris { display: flex; align-items: center; gap: 12px; }
+    .btn-kembali {
+      width: 38px; height: 38px; flex-shrink: 0;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .judul-hal { color: white; font-size: 18px; font-weight: 600; flex: 1; }
+    .btn-tandai-semua {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;
+      font-family: 'Nunito', sans-serif; padding: 6px 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .konten {
+      padding: 16px;
+      padding-bottom: calc(32px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+    }
+
+    .kartu-notif {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 8px;
+      cursor: pointer; display: flex; gap: 12px; align-items: flex-start;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease;
+      position: relative;
+    }
+    .kartu-notif:active { transform: scale(0.98); }
+    .kartu-notif.belum::before {
+      content: ''; position: absolute; left: 6px; top: 18px;
+      width: 7px; height: 7px; border-radius: 50%; background: var(--teal);
+    }
+    .ikon-notif {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: var(--teal-muda);
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .isi-notif { flex: 1; min-width: 0; }
+    .judul-notif { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .teks-notif { font-size: 13px; color: var(--teks-muted); margin-top: 3px; line-height: 1.45; }
+    .waktu-notif { font-size: 11px; color: var(--teks-muted); margin-top: 6px; opacity: 0.8; }
+
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite;
+      border-radius: var(--radius-besar); height: 72px; margin-bottom: 8px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-baris">
+    <button class="btn-kembali" onclick="window.location.href='beranda-ortu.html'" aria-label="Kembali">‹</button>
+    <div class="judul-hal">Notifikasi</div>
+    <button class="btn-tandai-semua" id="btn-tandai-semua" style="display:none">Tandai dibaca</button>
+  </div>
+</div>
+
+<div class="konten">
+  <div id="el-loading">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
+
+  <div id="el-daftar" style="display:none"></div>
+
+  <div id="el-kosong" class="state-kosong" style="display:none">
+    <div class="state-ikon">🔔</div>
+    <div class="state-judul">Belum ada notifikasi</div>
+    <div class="state-teks">Kamu akan diberi tahu di sini jika anakmu tercatat tidak masuk.</div>
+  </div>
+
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-ikon">😕</div>
+    <div class="state-judul">Tidak bisa memuat</div>
+    <div class="state-teks">Cek koneksi internetmu, lalu coba lagi.</div>
+    <button class="btn btn-teal" id="btn-coba-lagi">Coba Lagi</button>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const elLoading = document.getElementById('el-loading')
+  const elDaftar  = document.getElementById('el-daftar')
+  const elKosong  = document.getElementById('el-kosong')
+  const elError   = document.getElementById('el-error')
+  const btnSemua  = document.getElementById('btn-tandai-semua')
+
+  function tampilkan(yang) {
+    elLoading.style.display = yang === 'loading' ? 'block' : 'none'
+    elDaftar.style.display  = yang === 'daftar'  ? 'block' : 'none'
+    elKosong.style.display  = yang === 'kosong'  ? 'block' : 'none'
+    elError.style.display   = yang === 'error'   ? 'block' : 'none'
+    btnSemua.style.display  = yang === 'daftar'  ? 'block' : 'none'
+  }
+
+  function waktuRelatif(isoStr) {
+    const t = new Date(isoStr)
+    const detik = Math.floor((Date.now() - t.getTime()) / 1000)
+    if (detik < 60)    return 'Baru saja'
+    if (detik < 3600)  return `${Math.floor(detik / 60)} menit lalu`
+    if (detik < 86400) return `${Math.floor(detik / 3600)} jam lalu`
+    if (detik < 604800) return `${Math.floor(detik / 86400)} hari lalu`
+    const tgl = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+    return `${t.getDate()} ${tgl[t.getMonth()]}`
+  }
+
+  async function muat() {
+    tampilkan('loading')
+    const { data, error } = await supabase.rpc('daftar_notif', { p_limit: 50 })
+    if (error) { tampilkan('error'); return }
+    if (!data || data.length === 0) { tampilkan('kosong'); return }
+
+    elDaftar.innerHTML = ''
+    data.forEach(n => {
+      const el = document.createElement('div')
+      el.className = 'kartu-notif' + (n.dibaca ? '' : ' belum')
+      el.innerHTML = `
+        <div class="ikon-notif">🗓️</div>
+        <div class="isi-notif">
+          <div class="judul-notif">${n.judul}</div>
+          <div class="teks-notif">${n.isi}</div>
+          <div class="waktu-notif">${waktuRelatif(n.dibuat_pada)}</div>
+        </div>
+      `
+      el.addEventListener('click', async () => {
+        // Tandai dibaca dulu (kalau belum), lalu buka tautan
+        if (!n.dibaca) {
+          await supabase.rpc('tandai_notif_dibaca', { p_notif_id: n.id })
+        }
+        if (n.tautan) {
+          window.location.href = n.tautan
+        }
+      })
+      elDaftar.appendChild(el)
+    })
+
+    tampilkan('daftar')
+  }
+
+  btnSemua.addEventListener('click', async () => {
+    const { error } = await supabase.rpc('tandai_semua_notif_dibaca')
+    if (error) { toast('Gagal menandai. Coba lagi ya.', 'error'); return }
+    toast('Semua notifikasi ditandai dibaca ✓', 'sukses')
+    muat()
+  })
+  document.getElementById('btn-coba-lagi').addEventListener('click', muat)
+  muat()
+
+  })()
+</script>
+</body>
+</html>

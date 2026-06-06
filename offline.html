@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Offline</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+    }
+    .konten {
+      text-align: center;
+      padding: 40px 32px;
+      max-width: 320px;
+    }
+    .ikon { font-size: 64px; margin-bottom: 20px; }
+    h1 { font-size: 20px; color: var(--teks-utama); margin-bottom: 10px; }
+    p { font-size: 14px; color: var(--teks-muted); line-height: 1.6; margin-bottom: 28px; }
+    button {
+      padding: 13px 28px;
+      background: var(--ungu);
+      color: white;
+      border-radius: 999px;
+      font-size: 14px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="konten">
+    <div class="ikon">🌐</div>
+    <h1>Koneksi terputus</h1>
+    <p>Sepertinya internet kamu sedang tidak aktif. Sambungkan dulu ya, lalu coba lagi.</p>
+    <button onclick="location.reload()">Coba lagi</button>
+  </div>
+</body>
+</html>

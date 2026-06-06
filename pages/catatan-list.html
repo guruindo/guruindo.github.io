@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Catatan</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    .header {
+      background: var(--ungu);
+      padding: 44px max(16px, calc((100% - 480px) / 2)) 18px;
+      padding-top: calc(44px + env(safe-area-inset-top));
+      display: flex; align-items: center; gap: 12px;
+    }
+    .btn-kembali {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .header-judul { color: white; font-size: 18px; font-weight: 600; }
+    .header-sub   { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 1px; }
+
+    .konten {
+      padding: 16px;
+      padding-bottom: calc(90px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+    }
+
+    /* Saklar terima chat (guru) */
+    .saklar-box {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .saklar-info { flex: 1; min-width: 0; }
+    .saklar-judul { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .saklar-ket   { font-size: 12px; color: var(--teks-muted); margin-top: 2px; line-height: 1.4; }
+    .switch {
+      width: 48px; height: 27px; border-radius: 20px; border: none;
+      background: #1D9E75; position: relative; cursor: pointer; flex-shrink: 0;
+      padding: 0; transition: background 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .switch.mati { background: #B4B2A9; }
+    .switch .knob {
+      position: absolute; top: 3px; left: 24px;
+      width: 21px; height: 21px; border-radius: 50%; background: white;
+      transition: left 0.18s;
+    }
+    .switch.mati .knob { left: 3px; }
+
+    .seksi-judul {
+      font-size: 13px; font-weight: 600; color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 0 10px;
+    }
+
+    .kartu-thread {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease;
+    }
+    .kartu-thread:active { transform: scale(0.98); }
+    .avatar-anak {
+      width: 46px; height: 46px; border-radius: 13px;
+      background: var(--ungu-muda);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 21px; flex-shrink: 0;
+    }
+    .thread-info { flex: 1; min-width: 0; }
+    .thread-nama {
+      font-size: 14px; font-weight: 600; color: var(--teks-utama);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .thread-cuplikan {
+      font-size: 12px; color: var(--teks-muted); margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .thread-waktu { font-size: 11px; color: var(--teks-ringan); flex-shrink: 0; }
+
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite;
+      border-radius: var(--radius-besar); height: 74px; margin-bottom: 10px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid var(--garis);
+      display: flex; z-index: 50; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav-inner { display: flex; width: 100%; max-width: 480px; margin: 0 auto; }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 6px; border: none; background: none; cursor: pointer;
+      gap: 3px; opacity: 0.4; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item.aktif { opacity: 1; }
+    .nav-icon  { font-size: 20px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--teks-muted); font-family: 'Nunito', sans-serif; }
+    .nav-item.aktif .nav-label { color: var(--warna-aktif); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+  <div>
+    <div class="header-judul">Catatan</div>
+    <div class="header-sub" id="header-sub">Memuat...</div>
+  </div>
+</div>
+
+<div class="konten">
+
+  <!-- Saklar terima chat (hanya guru) -->
+  <div class="saklar-box" id="saklar-box" style="display:none">
+    <div class="saklar-info">
+      <div class="saklar-judul">Terima balasan ortu</div>
+      <div class="saklar-ket" id="saklar-ket">Saat dimatikan, balasan ortu ditahan dulu.</div>
+    </div>
+    <button class="switch" id="switch-chat" role="switch" aria-checked="true" aria-label="Terima balasan ortu">
+      <span class="knob"></span>
+    </button>
+  </div>
+
+  <div class="seksi-judul" id="seksi-judul" style="display:none">Percakapan</div>
+
+  <div id="el-loading">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="opacity:0.6"></div>
+  </div>
+
+  <div id="el-daftar" style="display:none"></div>
+
+  <div id="el-kosong" class="state-kosong" style="display:none">
+    <div class="state-ikon">💬</div>
+    <div class="state-judul" id="kosong-judul">Belum ada catatan</div>
+    <div class="state-teks" id="kosong-teks">Catatan personal tentang anak akan muncul di sini.</div>
+  </div>
+
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-ikon">😕</div>
+    <div class="state-judul">Koneksi bermasalah</div>
+    <div class="state-teks">Tidak bisa memuat catatan. Cek koneksi, lalu coba lagi.</div>
+    <button class="btn btn-utama" id="btn-retry">Coba Lagi</button>
+  </div>
+
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const { data: profil } = await supabase
+    .from('profil').select('nama, peran, terima_chat').eq('id', user.id).maybeSingle()
+  if (!profil) { window.location.href = 'pilih-peran.html'; return }
+
+  const peran = profil.peran
+  const warnaAktif = peran === 'guru' ? '#534AB7' : '#1D9E75'
+  document.documentElement.style.setProperty('--warna-aktif', warnaAktif)
+  document.getElementById('header-sub').textContent =
+    peran === 'guru' ? 'Catatan personal ke wali murid' : 'Catatan dari guru tentang anak'
+
+  const elLoading = document.getElementById('el-loading')
+  const elDaftar  = document.getElementById('el-daftar')
+  const elKosong  = document.getElementById('el-kosong')
+  const elError   = document.getElementById('el-error')
+  const seksi     = document.getElementById('seksi-judul')
+
+  function sembunyiSemua() {
+    elLoading.style.display = 'none'
+    elDaftar.style.display  = 'none'
+    elKosong.style.display  = 'none'
+    elError.style.display   = 'none'
+    seksi.style.display     = 'none'
+  }
+
+  function waktuRamah(iso) {
+    const d = new Date(iso); const kini = new Date()
+    const beda = (kini - d) / 1000
+    if (beda < 60)    return 'Baru saja'
+    if (beda < 3600)  return Math.floor(beda / 60) + ' mnt'
+    if (beda < 86400) return Math.floor(beda / 3600) + ' jam'
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+  }
+  function aman(teks) {
+    const div = document.createElement('div'); div.textContent = teks; return div.innerHTML
+  }
+
+  // ── Saklar terima_chat (guru) ──
+  if (peran === 'guru') {
+    const box = document.getElementById('saklar-box')
+    const sw  = document.getElementById('switch-chat')
+    const ket = document.getElementById('saklar-ket')
+    box.style.display = 'flex'
+
+    function gambarSaklar(aktif) {
+      sw.classList.toggle('mati', !aktif)
+      sw.setAttribute('aria-checked', String(aktif))
+      ket.textContent = aktif
+        ? 'Ortu bisa membalas catatan yang kamu buka. Matikan untuk menahan balasan.'
+        : 'Balasan ortu sedang ditahan. Nyalakan lagi saat kamu siap.'
+    }
+    gambarSaklar(profil.terima_chat !== false)
+
+    sw.addEventListener('click', async () => {
+      const target = sw.classList.contains('mati') // sedang mati -> mau nyalakan
+      sw.style.pointerEvents = 'none'
+      const { data, error } = await supabase.rpc('set_terima_chat', { p_aktif: target })
+      sw.style.pointerEvents = 'auto'
+      if (error) { toast('Gagal mengubah. Coba lagi.', 'error'); console.error(error); return }
+      gambarSaklar(target)
+      toast(target ? 'Sekarang menerima balasan ortu 😊' : 'Balasan ortu ditahan untuk sementara', 'info')
+    })
+  }
+
+  // ── Muat daftar thread ──
+  async function muat() {
+    sembunyiSemua()
+    elLoading.style.display = 'block'
+
+    const rpc = peran === 'guru' ? 'daftar_catatan_guru' : 'daftar_catatan_ortu'
+    const { data, error } = await supabase.rpc(rpc)
+
+    sembunyiSemua()
+
+    if (error) { elError.style.display = 'flex'; console.error('daftar catatan:', error); return }
+
+    seksi.style.display = 'block'
+
+    if (!data || data.length === 0) {
+      elKosong.style.display = 'flex'
+      if (peran === 'guru') {
+        document.getElementById('kosong-judul').textContent = 'Belum ada catatan'
+        document.getElementById('kosong-teks').textContent =
+          'Buka detail murid di kelas untuk menulis catatan personal ke walinya.'
+      } else {
+        document.getElementById('kosong-judul').textContent = 'Belum ada catatan'
+        document.getElementById('kosong-teks').textContent =
+          'Belum ada catatan dari guru tentang anak. Catatan akan muncul di sini.'
+      }
+      return
+    }
+
+    elDaftar.style.display = 'block'
+    elDaftar.innerHTML = ''
+    data.forEach(t => {
+      const el = document.createElement('div')
+      el.className = 'kartu-thread'
+      el.innerHTML = `
+        <div class="avatar-anak">🧒</div>
+        <div class="thread-info">
+          <div class="thread-nama">${aman(t.nama_murid)} · ${aman(t.nama_kelas)}</div>
+          <div class="thread-cuplikan">${aman(t.isi_terakhir)}</div>
+        </div>
+        <div class="thread-waktu">${waktuRamah(t.waktu_terakhir)}</div>
+      `
+      el.addEventListener('click', () => {
+        window.location.href = 'catatan-thread.html?murid=' + t.murid_id
+      })
+      elDaftar.appendChild(el)
+    })
+  }
+  muat()
+  window.muat = muat
+  document.getElementById('btn-retry').addEventListener('click', muat)
+
+  // ── Bottom nav ──
+  const beranda = peran === 'guru' ? 'beranda-guru.html' : 'beranda-ortu.html'
+  const absensiBtn = peran === 'guru'
+    ? `<button class="nav-item" id="nav-absensi"><span class="nav-icon">✅</span><span class="nav-label">Absensi</span></button>`
+    : ''
+  document.getElementById('bottom-nav').innerHTML = `<div class="bottom-nav-inner">
+    <button class="nav-item" onclick="window.location.href='${beranda}'">
+      <span class="nav-icon">🏠</span><span class="nav-label">Beranda</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='pengumuman.html'">
+      <span class="nav-icon">📢</span><span class="nav-label">Pengumuman</span>
+    </button>
+    ${absensiBtn}
+    <button class="nav-item aktif">
+      <span class="nav-icon">💬</span><span class="nav-label">Catatan</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='${beranda}'">
+      <span class="nav-icon">👤</span><span class="nav-label">Profil</span>
+    </button>
+  </div>`
+  const absEl = document.getElementById('nav-absensi')
+  if (absEl) absEl.addEventListener('click', () => toast('Absensi akan hadir segera 🌱', 'info'))
+
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = beranda
+  })
+
+  })()
+</script>
+</body>
+</html>

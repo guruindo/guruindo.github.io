@@ -1,0 +1,104 @@
+/* =============================================
+   GURUINDO — CSS UTAMA
+   Warna: Ungu #534AB7, Teal #1D9E75
+   Font: Poppins (judul) + Nunito (teks)
+   ============================================= */
+
+:root {
+  --ungu:        #534AB7;
+  --ungu-muda:   #EEEDFE;
+  --ungu-gelap:  #3C3489;
+  --teal:        #1D9E75;
+  --teal-muda:   #E1F5EE;
+  --teal-gelap:  #0F6E56;
+
+  --teks-utama:  #2D3748;
+  --teks-muted:  #718096;
+  --teks-ringan: #A0AEC0;
+
+  --bg-putih:    #FFFFFF;
+  --bg-abu:      #F7F8FA;
+  --garis:       #E2E8F0;
+
+  --shadow-halus:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-sedang: 0 4px 12px rgba(0,0,0,0.12);
+
+  --radius-kecil:  8px;
+  --radius-sedang: 12px;
+  --radius-besar:  20px;
+  --radius-bulat:  999px;
+}
+
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  color: var(--teks-utama);
+  background: var(--bg-abu);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: 'Poppins', sans-serif; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* Animasi */
+@keyframes gi-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes gi-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+@keyframes gi-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================
+   SPLASH SCREEN
+   ============================================= */
+.splash-page {
+  background: linear-gradient(145deg, #534AB7 0%, #3C3489 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.splash-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 24px;
+  animation: gi-fadein 0.5s ease;
+}
+.splash-brand {
+  font-size: 28px;
+  font-weight: 600;
+  color: white;
+  letter-spacing: -0.3px;
+}
+.splash-tagline {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+}
+.splash-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 36px;
+}
+.splash-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  animation: gi-bounce 1.4s ease-in-out infinite;
+}
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }

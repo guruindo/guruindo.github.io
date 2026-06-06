@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Daftarkan Kelas</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .pilih-sekolah {
+      display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px;
+    }
+    .opsi-sekolah {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 14px; background: white;
+      border: 1.5px solid var(--garis); border-radius: var(--radius-sedang);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s;
+    }
+    .opsi-sekolah.dipilih { border-color: var(--ungu); background: #FAFAFE; }
+    .opsi-radio {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--garis); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: transparent;
+    }
+    .opsi-sekolah.dipilih .opsi-radio {
+      background: var(--ungu); border-color: var(--ungu); color: white;
+    }
+    .opsi-teks { flex: 1; min-width: 0; }
+    .opsi-nama { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .opsi-kota { font-size: 12px; color: var(--teks-muted); margin-top: 1px; }
+    .form-sekolah-baru {
+      display: flex; flex-direction: column; gap: 14px;
+      padding: 14px; background: var(--bg-abu);
+      border-radius: var(--radius-sedang); margin-top: 4px;
+    }
+    .hint { font-size: 12px; color: var(--teks-muted); line-height: 1.5; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="halaman">
+
+  <!-- Header -->
+  <div class="header-halaman">
+    <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+    <span class="header-judul">Daftarkan Kelas</span>
+  </div>
+
+  <!-- Konten -->
+  <div class="konten-scroll">
+
+    <!-- Loading awal -->
+    <div id="el-loading" style="text-align:center;padding:48px 0;color:var(--teks-muted)">
+      Memuat...
+    </div>
+
+    <!-- Form (disembunyikan dulu sampai siap) -->
+    <div id="el-form" style="display:none">
+
+      <!-- Pilih sekolah (muncul hanya kalau guru sudah punya sekolah) -->
+      <div id="blok-pilih-sekolah" style="display:none;margin-bottom:20px">
+        <label class="input-label" style="margin-bottom:8px;display:block">Sekolah</label>
+        <div class="pilih-sekolah" id="daftar-opsi-sekolah"></div>
+
+        <!-- Opsi: sekolah baru -->
+        <div class="opsi-sekolah" id="opsi-baru" style="margin-top:8px">
+          <div class="opsi-radio">✓</div>
+          <div class="opsi-teks">
+            <div class="opsi-nama">+ Sekolah baru</div>
+            <div class="opsi-kota">Daftarkan sekolah lain</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form sekolah baru (muncul kalau belum punya sekolah, atau pilih "baru") -->
+      <div class="form-sekolah-baru" id="form-sekolah-baru">
+        <div class="input-grup">
+          <label class="input-label" for="in-sekolah">Nama Sekolah</label>
+          <input type="text" id="in-sekolah" class="input-field"
+            placeholder="Contoh: SDN 1 Pangkatrejo" autocomplete="off">
+        </div>
+        <div class="input-grup">
+          <label class="input-label" for="in-kota">Kota / Kabupaten <span style="font-weight:400;text-transform:none">(opsional)</span></label>
+          <input type="text" id="in-kota" class="input-field"
+            placeholder="Contoh: Lamongan" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Data kelas -->
+      <div class="input-grup" style="margin-bottom:14px">
+        <label class="input-label" for="in-kelas">Nama Kelas</label>
+        <input type="text" id="in-kelas" class="input-field"
+          placeholder="Contoh: Kelas 4A" autocomplete="off">
+      </div>
+
+      <div class="input-grup" style="margin-bottom:8px">
+        <label class="input-label" for="in-tahun">Tahun Ajaran <span style="font-weight:400;text-transform:none">(opsional)</span></label>
+        <input type="text" id="in-tahun" class="input-field"
+          placeholder="Contoh: 2025/2026" autocomplete="off">
+      </div>
+
+      <p class="hint">
+        Setelah kelas dibuat, kamu bisa menambahkan murid satu per satu.
+        Tiap murid akan dapat kode unik untuk dibagikan ke orang tuanya.
+      </p>
+
+      <div class="error-kotak" id="el-err" style="margin-top:14px"></div>
+
+      <button class="btn btn-utama btn-blok" id="btn-simpan" style="margin-top:16px">
+        Buat Kelas
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast, loading } from '../js/ui.js'
+
+  ;(async () => {
+
+  // Cek sesi & peran
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const { data: profil } = await supabase
+    .from('profil').select('peran').eq('id', user.id).maybeSingle()
+  if (!profil)               { window.location.href = 'pilih-peran.html'; return }
+  if (profil.peran !== 'guru') { window.location.href = 'beranda-ortu.html'; return }
+
+  // State pilihan sekolah: null = belum pilih, 'baru' = sekolah baru, atau UUID sekolah
+  let sekolahDipilih = 'baru'
+  let punyaSekolah = false
+
+  // Ambil daftar sekolah yang guru ini sudah punya
+  const { data: sekolahSaya, error: errSek } =
+    await supabase.rpc('daftar_sekolah_saya')
+
+  document.getElementById('el-loading').style.display = 'none'
+  document.getElementById('el-form').style.display = 'block'
+
+  if (!errSek && sekolahSaya && sekolahSaya.length > 0) {
+    punyaSekolah = true
+    document.getElementById('blok-pilih-sekolah').style.display = 'block'
+
+    const kontainer = document.getElementById('daftar-opsi-sekolah')
+    sekolahSaya.forEach((s, idx) => {
+      const opsi = document.createElement('div')
+      opsi.className = 'opsi-sekolah'
+      opsi.innerHTML = `
+        <div class="opsi-radio">✓</div>
+        <div class="opsi-teks">
+          <div class="opsi-nama">${s.nama}</div>
+          <div class="opsi-kota">${s.kota || 'Sekolah saya'}</div>
+        </div>
+      `
+      opsi.addEventListener('click', () => pilihSekolah(s.id, opsi))
+      kontainer.appendChild(opsi)
+
+      // Pilih yang pertama secara default
+      if (idx === 0) pilihSekolah(s.id, opsi)
+    })
+
+    // Opsi "sekolah baru"
+    document.getElementById('opsi-baru').addEventListener('click', () => {
+      pilihSekolah('baru', document.getElementById('opsi-baru'))
+    })
+  } else {
+    // Belum punya sekolah → langsung tampil form sekolah baru
+    sekolahDipilih = 'baru'
+    document.getElementById('form-sekolah-baru').style.display = 'flex'
+  }
+
+  function pilihSekolah(nilai, elemen) {
+    sekolahDipilih = nilai
+    // Reset semua highlight
+    document.querySelectorAll('.opsi-sekolah').forEach(o => o.classList.remove('dipilih'))
+    elemen.classList.add('dipilih')
+    // Tampilkan/sembunyikan form sekolah baru
+    document.getElementById('form-sekolah-baru').style.display =
+      (nilai === 'baru') ? 'flex' : 'none'
+    sembunyikanErr()
+  }
+
+  function tampilErr(pesan) {
+    const el = document.getElementById('el-err')
+    el.textContent = pesan
+    el.classList.add('tampil')
+  }
+  function sembunyikanErr() {
+    document.getElementById('el-err').classList.remove('tampil')
+  }
+
+  // Tombol simpan
+  document.getElementById('btn-simpan').addEventListener('click', async () => {
+    const namaKelas = document.getElementById('in-kelas').value.trim()
+    const tahun     = document.getElementById('in-tahun').value.trim()
+
+    // Validasi nama kelas
+    if (!namaKelas) {
+      tampilErr('Nama kelas belum diisi.')
+      document.getElementById('in-kelas').focus()
+      return
+    }
+
+    // Siapkan parameter sesuai mode
+    const params = {
+      p_nama_kelas: namaKelas,
+      p_tahun_ajaran: tahun || null,
+      p_nama_sekolah: null,
+      p_sekolah_id: null,
+      p_kota: null
+    }
+
+    if (sekolahDipilih === 'baru') {
+      const namaSek = document.getElementById('in-sekolah').value.trim()
+      const kota    = document.getElementById('in-kota').value.trim()
+      if (!namaSek) {
+        tampilErr('Nama sekolah belum diisi.')
+        document.getElementById('in-sekolah').focus()
+        return
+      }
+      params.p_nama_sekolah = namaSek
+      params.p_kota = kota || null
+    } else {
+      params.p_sekolah_id = sekolahDipilih
+    }
+
+    // Kunci tombol (penangkal Murphy #2: klik berkali-kali)
+    const btn = document.getElementById('btn-simpan')
+    btn.disabled = true
+    btn.textContent = 'Menyimpan...'
+    sembunyikanErr()
+
+    const { data: hasil, error } = await supabase.rpc('daftar_kelas_baru', params)
+
+    if (error) {
+      btn.disabled = false
+      btn.textContent = 'Buat Kelas'
+      tampilErr('Gagal menyimpan: ' + (error.message || 'coba lagi ya'))
+      console.error('daftar_kelas_baru:', error)
+      return
+    }
+
+    // Berhasil → ke halaman detail kelas
+    toast('Kelas berhasil dibuat! 🎉', 'sukses')
+    setTimeout(() => {
+      window.location.href = 'kelas.html?id=' + hasil.kelas_id
+    }, 600)
+  })
+
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = 'beranda-guru.html'
+  })
+
+  })()
+</script>
+</body>
+</html>

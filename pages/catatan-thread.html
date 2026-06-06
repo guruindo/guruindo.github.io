@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Catatan Anak</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    html, body { height: 100%; }
+    body { background: var(--bg-abu); display: flex; flex-direction: column; }
+
+    .header {
+      background: var(--ungu);
+      padding: 44px 16px 16px;
+      padding-top: calc(44px + env(safe-area-inset-top));
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .btn-kembali {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .header-judul { color: white; font-size: 16px; font-weight: 600; }
+    .header-sub   { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 1px; }
+
+    .thread {
+      flex: 1; overflow-y: auto;
+      padding: 16px;
+      max-width: 480px; margin: 0 auto; width: 100%;
+      box-sizing: border-box;
+    }
+
+    .bubble-baris { display: flex; margin-bottom: 12px; }
+    .bubble-baris.kanan { justify-content: flex-end; }
+    .bubble {
+      max-width: 78%;
+      padding: 10px 13px; border-radius: 16px;
+      font-size: 14px; line-height: 1.5; word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .bubble.kiri  { background: white; color: var(--teks-utama); border-bottom-left-radius: 5px; }
+    .bubble.kanan { background: var(--ungu); color: white; border-bottom-right-radius: 5px; }
+    .bubble-meta { font-size: 10px; margin-top: 5px; opacity: 0.7; }
+    .bubble.kanan .bubble-meta { color: rgba(255,255,255,0.85); }
+    .bubble.kiri  .bubble-meta { color: var(--teks-ringan); }
+    .lencana-kunci {
+      font-size: 10px; margin-top: 4px; color: var(--teks-ringan);
+      display: flex; align-items: center; gap: 3px;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite;
+      border-radius: 16px; height: 48px; margin-bottom: 12px; width: 70%;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* Komposer bawah */
+    .komposer {
+      flex-shrink: 0; background: white; border-top: 1px solid var(--garis);
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    }
+    .komposer-inner { max-width: 480px; margin: 0 auto; }
+    .toggle-balas {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 4px 8px; font-size: 12px; color: var(--teks-muted);
+    }
+    .switch-kecil {
+      width: 40px; height: 23px; border-radius: 20px; border: none;
+      background: var(--ungu); position: relative; cursor: pointer; padding: 0;
+      transition: background 0.18s; -webkit-tap-highlight-color: transparent;
+    }
+    .switch-kecil.mati { background: #B4B2A9; }
+    .switch-kecil .knob {
+      position: absolute; top: 3px; left: 20px;
+      width: 17px; height: 17px; border-radius: 50%; background: white;
+      transition: left 0.18s;
+    }
+    .switch-kecil.mati .knob { left: 3px; }
+    .baris-input { display: flex; align-items: flex-end; gap: 8px; }
+    .baris-input textarea {
+      flex: 1; border: 1.5px solid var(--garis); border-radius: 18px;
+      padding: 10px 14px; font-size: 14px; font-family: 'Nunito', sans-serif;
+      resize: none; max-height: 110px; line-height: 1.4;
+      color: var(--teks-utama); box-sizing: border-box;
+    }
+    .baris-input textarea:focus { outline: none; border-color: var(--ungu); }
+    .btn-kirim {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--ungu); color: white; font-size: 18px; cursor: pointer;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-kirim:disabled { opacity: 0.5; cursor: default; }
+
+    /* Banner info ortu (mis. guru off / tidak boleh balas) */
+    .banner {
+      background: var(--ungu-muda); color: var(--ungu-gelap);
+      padding: 10px 14px; border-radius: 12px; font-size: 12px;
+      line-height: 1.45; text-align: center;
+    }
+    .banner.peringatan { background: #FBEFD8; color: #8A6314; }
+
+    .state-tengah {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+  <div>
+    <div class="header-judul" id="header-judul">Catatan</div>
+    <div class="header-sub" id="header-sub">Memuat...</div>
+  </div>
+</div>
+
+<!-- Thread / daftar pesan -->
+<div class="thread" id="thread">
+  <div class="skeleton"></div>
+  <div class="skeleton" style="margin-left:auto; opacity:0.6"></div>
+</div>
+
+<!-- Error state (gantikan thread) -->
+<div class="state-tengah" id="el-error" style="display:none">
+  <div class="state-ikon">😕</div>
+  <div class="state-judul">Tidak bisa memuat</div>
+  <div class="state-teks">Cek koneksi, lalu coba lagi.</div>
+  <button class="btn btn-utama" id="btn-retry">Coba Lagi</button>
+</div>
+
+<!-- Komposer (diisi sesuai peran) -->
+<div class="komposer" id="komposer" style="display:none">
+  <div class="komposer-inner" id="komposer-inner"></div>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  const params = new URLSearchParams(window.location.search)
+  const muridId = params.get('murid')
+  if (!muridId) { window.location.href = 'catatan-list.html'; return }
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const { data: profil } = await supabase
+    .from('profil').select('peran').eq('id', user.id).maybeSingle()
+  if (!profil) { window.location.href = 'pilih-peran.html'; return }
+  const peran = profil.peran
+
+  const thread = document.getElementById('thread')
+  const elError = document.getElementById('el-error')
+
+  function waktuRamah(iso) {
+    const d = new Date(iso)
+    return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+  function aman(teks) {
+    const div = document.createElement('div'); div.textContent = teks; return div.innerHTML
+  }
+
+  // Pesan terakhir dari GURU yang boleh_balas -> jadi target balasan ortu
+  let pesanBolehBalasId = null
+  let adaPesan = false
+
+  // ── Muat thread ──
+  async function muat() {
+    elError.style.display = 'none'
+    thread.style.display = 'block'
+
+    // Info anak (nama + kelas) — lewat tabel murid (RLS sudah batasi akses)
+    const { data: murid, error: errMurid } = await supabase
+      .from('murid')
+      .select('nama, kelas ( nama_kelas )')
+      .eq('id', muridId)
+      .maybeSingle()
+
+    if (errMurid || !murid) {
+      thread.style.display = 'none'; elError.style.display = 'flex'
+      console.error('info murid:', errMurid); return
+    }
+    document.getElementById('header-judul').textContent = murid.nama
+    document.getElementById('header-sub').textContent =
+      (murid.kelas?.nama_kelas || '') + (peran === 'guru' ? ' · ke wali murid' : ' · dari guru')
+
+    // Semua pesan personal untuk murid ini (RLS: hanya guru pengajar & wali)
+    const { data: pesan, error } = await supabase
+      .from('pesan')
+      .select('id, isi, dibuat_pada, pengirim_id, boleh_balas, balas_dari_id')
+      .eq('jenis', 'personal')
+      .eq('murid_id', muridId)
+      .order('dibuat_pada', { ascending: true })
+
+    if (error) {
+      thread.style.display = 'none'; elError.style.display = 'flex'
+      console.error('muat thread:', error); return
+    }
+
+    thread.innerHTML = ''
+    pesanBolehBalasId = null
+    adaPesan = pesan && pesan.length > 0
+
+    if (!adaPesan) {
+      thread.innerHTML = `
+        <div class="state-tengah">
+          <div class="state-ikon">💬</div>
+          <div class="state-judul">Belum ada catatan</div>
+          <div class="state-teks">${peran === 'guru'
+            ? 'Tulis catatan pertama tentang ' + aman(murid.nama) + ' di bawah.'
+            : 'Belum ada catatan dari guru.'}</div>
+        </div>`
+    } else {
+      pesan.forEach(p => {
+        const sayaPengirim = p.pengirim_id === user.id
+        const baris = document.createElement('div')
+        baris.className = 'bubble-baris ' + (sayaPengirim ? 'kanan' : 'kiri')
+        // Lencana "dibuka untuk dibalas" hanya di pesan guru yang boleh_balas
+        const tampilKunci = !p.balas_dari_id && p.boleh_balas && peran === 'ortu'
+        baris.innerHTML = `
+          <div class="bubble ${sayaPengirim ? 'kanan' : 'kiri'}">
+            <div>${aman(p.isi)}</div>
+            <div class="bubble-meta">${waktuRamah(p.dibuat_pada)}</div>
+            ${tampilKunci ? '<div class="lencana-kunci">↩️ boleh dibalas</div>' : ''}
+          </div>`
+        thread.appendChild(baris)
+
+        // Catat pesan guru terbaru yang boleh dibalas (untuk komposer ortu)
+        if (!p.balas_dari_id && p.boleh_balas && p.pengirim_id !== user.id) {
+          pesanBolehBalasId = p.id
+        }
+      })
+      thread.scrollTop = thread.scrollHeight
+    }
+
+    bangunKomposer(murid.nama)
+  }
+
+  // ── Komposer sesuai peran ──
+  function bangunKomposer(namaAnak) {
+    const kom = document.getElementById('komposer')
+    const inner = document.getElementById('komposer-inner')
+    kom.style.display = 'block'
+
+    if (peran === 'guru') {
+      inner.innerHTML = `
+        <div class="toggle-balas">
+          <span>Izinkan ortu membalas</span>
+          <button class="switch-kecil" id="sw-balas" role="switch" aria-checked="true" aria-label="Izinkan ortu membalas">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="baris-input">
+          <textarea id="in-isi" rows="1" placeholder="Tulis catatan tentang ${aman(namaAnak)}..."></textarea>
+          <button class="btn-kirim" id="btn-kirim" aria-label="Kirim">↑</button>
+        </div>`
+
+      const sw = document.getElementById('sw-balas')
+      let bolehBalas = true
+      sw.addEventListener('click', () => {
+        bolehBalas = !bolehBalas
+        sw.classList.toggle('mati', !bolehBalas)
+        sw.setAttribute('aria-checked', String(bolehBalas))
+      })
+
+      const inIsi = document.getElementById('in-isi')
+      autoGrow(inIsi)
+      const btn = document.getElementById('btn-kirim')
+      btn.addEventListener('click', async () => {
+        const isi = inIsi.value.trim()
+        if (!isi) return
+        btn.disabled = true
+        const { error } = await supabase.rpc('kirim_catatan', {
+          p_murid_id: muridId, p_isi: isi, p_boleh_balas: bolehBalas
+        })
+        btn.disabled = false
+        if (error) { toast(error.message || 'Gagal mengirim', 'error'); console.error(error); return }
+        inIsi.value = ''; inIsi.style.height = 'auto'
+        muat()
+      })
+
+    } else {
+      // ── ORTU ──
+      if (pesanBolehBalasId) {
+        inner.innerHTML = `
+          <div class="baris-input">
+            <textarea id="in-isi" rows="1" placeholder="Tulis balasan..."></textarea>
+            <button class="btn-kirim" id="btn-kirim" aria-label="Kirim">↑</button>
+          </div>`
+        const inIsi = document.getElementById('in-isi')
+        autoGrow(inIsi)
+        const btn = document.getElementById('btn-kirim')
+        btn.addEventListener('click', async () => {
+          const isi = inIsi.value.trim()
+          if (!isi) return
+          btn.disabled = true
+          const { data, error } = await supabase.rpc('balas_catatan', {
+            p_pesan_id: pesanBolehBalasId, p_isi: isi
+          })
+          btn.disabled = false
+          if (error) { toast(error.message || 'Gagal mengirim', 'error'); console.error(error); return }
+
+          // Fungsi mengembalikan berhasil=false saat guru menonaktifkan chat
+          if (data && data.berhasil === false && data.kode === 'GURU_OFF') {
+            toast('Guru sedang menonaktifkan pesan. Balasanmu belum terkirim — coba lagi nanti ya 🙏', 'peringatan')
+            return
+          }
+          inIsi.value = ''; inIsi.style.height = 'auto'
+          muat()
+        })
+      } else if (adaPesan) {
+        // Ada catatan tapi tidak ada yang dibuka untuk dibalas
+        inner.innerHTML = `<div class="banner">Guru belum membuka catatan ini untuk dibalas. Kamu bisa membacanya saja.</div>`
+      } else {
+        // Belum ada pesan sama sekali
+        inner.innerHTML = `<div class="banner">Catatan dari guru akan muncul di sini.</div>`
+      }
+    }
+  }
+
+  function autoGrow(ta) {
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto'
+      ta.style.height = Math.min(ta.scrollHeight, 110) + 'px'
+    })
+  }
+
+  muat()
+  document.getElementById('btn-retry').addEventListener('click', muat)
+
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = 'catatan-list.html'
+  })
+
+  })()
+</script>
+</body>
+</html>

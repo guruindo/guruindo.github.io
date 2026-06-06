@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Pengumuman</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    .header {
+      background: var(--ungu);
+      padding: 44px max(16px, calc((100% - 480px) / 2)) 18px;
+      padding-top: calc(44px + env(safe-area-inset-top));
+      display: flex; align-items: center; gap: 12px;
+    }
+    .btn-kembali {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .header-judul { color: white; font-size: 18px; font-weight: 600; }
+    .header-sub   { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 1px; }
+
+    .konten {
+      padding: 16px;
+      padding-bottom: calc(90px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+    }
+
+    /* Pemilih kelas (guru) */
+    .pilih-kelas {
+      width: 100%; padding: 12px 14px; font-size: 14px;
+      border: 1.5px solid var(--garis); border-radius: var(--radius-sedang);
+      background: white; color: var(--teks-utama);
+      font-family: 'Nunito', sans-serif; margin-bottom: 12px;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    /* Kotak tulis (guru) */
+    .kotak-tulis {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px; margin-bottom: 18px;
+    }
+    .kotak-tulis textarea {
+      width: 100%; border: 1.5px solid var(--garis);
+      border-radius: var(--radius-sedang); padding: 12px;
+      font-size: 14px; font-family: 'Nunito', sans-serif;
+      resize: none; color: var(--teks-utama); line-height: 1.5;
+      box-sizing: border-box;
+    }
+    .kotak-tulis textarea:focus { outline: none; border-color: var(--ungu); }
+    .baris-kirim {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 10px; gap: 10px;
+    }
+    .hint-searah { font-size: 11px; color: var(--teks-ringan); flex: 1; line-height: 1.4; }
+    .btn-kirim {
+      padding: 10px 18px; border: none; border-radius: var(--radius-sedang);
+      background: var(--ungu); color: white; font-size: 14px; font-weight: 600;
+      font-family: 'Nunito', sans-serif; cursor: pointer; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-kirim:disabled { opacity: 0.55; cursor: default; }
+
+    .seksi-judul {
+      font-size: 13px; font-weight: 600; color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 0 10px;
+    }
+
+    /* Kartu pengumuman */
+    .kartu-peng {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 10px;
+    }
+    .peng-atas {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .peng-pengirim { font-size: 13px; font-weight: 600; color: var(--ungu); }
+    .peng-waktu    { font-size: 11px; color: var(--teks-ringan); flex-shrink: 0; }
+    .peng-isi      { font-size: 14px; color: var(--teks-utama); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite;
+      border-radius: var(--radius-besar); height: 78px; margin-bottom: 10px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid var(--garis);
+      display: flex; z-index: 50; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav-inner { display: flex; width: 100%; max-width: 480px; margin: 0 auto; }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 6px; border: none; background: none; cursor: pointer;
+      gap: 3px; opacity: 0.4; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item.aktif { opacity: 1; }
+    .nav-icon  { font-size: 20px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--teks-muted); font-family: 'Nunito', sans-serif; }
+    .nav-item.aktif .nav-label { color: var(--warna-aktif); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+  <div>
+    <div class="header-judul">Pengumuman</div>
+    <div class="header-sub" id="header-sub">Memuat...</div>
+  </div>
+</div>
+
+<div class="konten">
+
+  <!-- ── BAGIAN GURU (tulis) — disembunyikan untuk ortu ── -->
+  <div id="area-guru" style="display:none">
+    <select class="pilih-kelas" id="pilih-kelas">
+      <option value="">Pilih kelas...</option>
+    </select>
+
+    <div class="kotak-tulis">
+      <textarea id="in-isi" rows="3" placeholder="Tulis pengumuman untuk semua ortu di kelas ini..."></textarea>
+      <div class="baris-kirim">
+        <span class="hint-searah">Pengumuman bersifat satu arah — ortu hanya membaca, tidak membalas.</span>
+        <button class="btn-kirim" id="btn-kirim">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BAGIAN ORTU (pilih kelas anak) — disembunyikan untuk guru ── -->
+  <div id="area-ortu" style="display:none">
+    <select class="pilih-kelas" id="pilih-kelas-ortu">
+      <option value="">Pilih kelas anak...</option>
+    </select>
+  </div>
+
+  <div class="seksi-judul" id="seksi-judul" style="display:none">Pengumuman terbaru</div>
+
+  <!-- Loading -->
+  <div id="el-loading" style="display:none">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="opacity:0.6"></div>
+  </div>
+
+  <!-- Daftar pengumuman -->
+  <div id="el-daftar" style="display:none"></div>
+
+  <!-- Empty -->
+  <div id="el-kosong" class="state-kosong" style="display:none">
+    <div class="state-ikon">📢</div>
+    <div class="state-judul">Belum ada pengumuman</div>
+    <div class="state-teks" id="kosong-teks">Pengumuman dari guru akan muncul di sini.</div>
+  </div>
+
+  <!-- Belum pilih kelas -->
+  <div id="el-pilih" class="state-kosong" style="display:none">
+    <div class="state-ikon">👆</div>
+    <div class="state-judul">Pilih kelas dulu</div>
+    <div class="state-teks">Pilih kelas di atas untuk melihat atau menulis pengumuman.</div>
+  </div>
+
+  <!-- Error -->
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-ikon">😕</div>
+    <div class="state-judul">Koneksi bermasalah</div>
+    <div class="state-teks">Tidak bisa memuat pengumuman. Cek koneksi, lalu coba lagi.</div>
+    <button class="btn btn-utama" id="btn-retry">Coba Lagi</button>
+  </div>
+
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const { data: profil } = await supabase
+    .from('profil').select('nama, peran').eq('id', user.id).maybeSingle()
+  if (!profil) { window.location.href = 'pilih-peran.html'; return }
+
+  const peran = profil.peran
+  const warnaAktif = peran === 'guru' ? '#534AB7' : '#1D9E75'
+  document.documentElement.style.setProperty('--warna-aktif', warnaAktif)
+  document.getElementById('header-sub').textContent =
+    peran === 'guru' ? 'Kirim kabar ke semua ortu' : 'Kabar dari sekolah'
+
+  // ── Helper tampilan ──
+  const elLoading = document.getElementById('el-loading')
+  const elDaftar  = document.getElementById('el-daftar')
+  const elKosong  = document.getElementById('el-kosong')
+  const elPilih   = document.getElementById('el-pilih')
+  const elError   = document.getElementById('el-error')
+  const seksi     = document.getElementById('seksi-judul')
+
+  function sembunyiSemua() {
+    elLoading.style.display = 'none'
+    elDaftar.style.display  = 'none'
+    elKosong.style.display  = 'none'
+    elPilih.style.display   = 'none'
+    elError.style.display   = 'none'
+    seksi.style.display     = 'none'
+  }
+
+  function waktuRamah(iso) {
+    const d = new Date(iso)
+    const kini = new Date()
+    const beda = (kini - d) / 1000
+    if (beda < 60)    return 'Baru saja'
+    if (beda < 3600)  return Math.floor(beda / 60) + ' mnt lalu'
+    if (beda < 86400) return Math.floor(beda / 3600) + ' jam lalu'
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+  }
+
+  // Anti-XSS sederhana untuk isi pesan
+  function aman(teks) {
+    const div = document.createElement('div')
+    div.textContent = teks
+    return div.innerHTML
+  }
+
+  let kelasTerpilih = ''
+
+  // ── Muat daftar pengumuman untuk kelas terpilih ──
+  async function muatDaftar() {
+    if (!kelasTerpilih) { sembunyiSemua(); elPilih.style.display = 'flex'; return }
+
+    sembunyiSemua()
+    elLoading.style.display = 'block'
+
+    const { data, error } = await supabase
+      .from('pesan')
+      .select('id, isi, dibuat_pada, pengirim_id, profil:pengirim_id ( nama )')
+      .eq('jenis', 'pengumuman')
+      .eq('kelas_id', kelasTerpilih)
+      .order('dibuat_pada', { ascending: false })
+
+    sembunyiSemua()
+
+    if (error) { elError.style.display = 'flex'; console.error('muat pengumuman:', error); return }
+
+    seksi.style.display = 'block'
+
+    if (!data || data.length === 0) {
+      elKosong.style.display = 'flex'
+      document.getElementById('kosong-teks').textContent =
+        peran === 'guru'
+          ? 'Belum ada pengumuman di kelas ini. Tulis yang pertama di atas.'
+          : 'Belum ada pengumuman dari guru untuk kelas ini.'
+      return
+    }
+
+    elDaftar.style.display = 'block'
+    elDaftar.innerHTML = ''
+    data.forEach(p => {
+      const nama = p.profil?.nama || 'Guru'
+      const el = document.createElement('div')
+      el.className = 'kartu-peng'
+      el.innerHTML = `
+        <div class="peng-atas">
+          <span class="peng-pengirim">${aman(nama)}</span>
+          <span class="peng-waktu">${waktuRamah(p.dibuat_pada)}</span>
+        </div>
+        <div class="peng-isi">${aman(p.isi)}</div>
+      `
+      elDaftar.appendChild(el)
+    })
+  }
+  window.muatDaftar = muatDaftar
+  document.getElementById('btn-retry').addEventListener('click', muatDaftar)
+
+  // ── Isi dropdown kelas ──
+  async function isiDropdown(selectEl, daftarKelas) {
+    daftarKelas.forEach(k => {
+      const opt = document.createElement('option')
+      opt.value = k.id
+      opt.textContent = k.nama_kelas + (k.sekolah ? ' · ' + k.sekolah : '')
+      selectEl.appendChild(opt)
+    })
+    // Kalau cuma satu kelas, langsung pilih
+    if (daftarKelas.length === 1) {
+      selectEl.value = daftarKelas[0].id
+      kelasTerpilih = daftarKelas[0].id
+      muatDaftar()
+    }
+  }
+
+  if (peran === 'guru') {
+    document.getElementById('area-guru').style.display = 'block'
+    const sel = document.getElementById('pilih-kelas')
+
+    const { data, error } = await supabase
+      .from('guru_kelas')
+      .select('kelas ( id, nama_kelas, sekolah ( nama ) )')
+      .eq('guru_id', user.id)
+
+    if (error || !data) {
+      sembunyiSemua(); elError.style.display = 'flex'
+    } else {
+      const kelasList = data.map(g => ({
+        id: g.kelas.id, nama_kelas: g.kelas.nama_kelas, sekolah: g.kelas.sekolah?.nama || ''
+      }))
+      if (kelasList.length === 0) {
+        sembunyiSemua(); elKosong.style.display = 'flex'
+        document.getElementById('kosong-teks').textContent =
+          'Kamu belum punya kelas. Daftarkan kelas dulu di Beranda.'
+        document.getElementById('area-guru').style.display = 'none'
+      } else {
+        await isiDropdown(sel, kelasList)
+        if (kelasList.length > 1) { sembunyiSemua(); elPilih.style.display = 'flex' }
+      }
+    }
+
+    sel.addEventListener('change', () => { kelasTerpilih = sel.value; muatDaftar() })
+
+    // ── Kirim pengumuman ──
+    const btnKirim = document.getElementById('btn-kirim')
+    const inIsi = document.getElementById('in-isi')
+    btnKirim.addEventListener('click', async () => {
+      const isi = inIsi.value.trim()
+      if (!kelasTerpilih) { toast('Pilih kelas dulu ya', 'peringatan'); return }
+      if (!isi) { toast('Isi pengumuman belum ditulis', 'peringatan'); return }
+
+      btnKirim.disabled = true
+      btnKirim.textContent = 'Mengirim...'
+
+      const { data: hasil, error } = await supabase
+        .rpc('kirim_pengumuman', { p_kelas_id: kelasTerpilih, p_isi: isi })
+
+      btnKirim.disabled = false
+      btnKirim.textContent = 'Kirim'
+
+      if (error) {
+        toast(error.message || 'Gagal mengirim. Coba lagi.', 'error')
+        console.error('kirim_pengumuman:', error)
+        return
+      }
+      inIsi.value = ''
+      toast('Pengumuman terkirim 📢', 'sukses')
+      muatDaftar()
+    })
+
+  } else {
+    // ── ORTU ──
+    document.getElementById('area-ortu').style.display = 'block'
+    const sel = document.getElementById('pilih-kelas-ortu')
+
+    const { data, error } = await supabase
+      .from('ortu_murid')
+      .select('murid ( kelas ( id, nama_kelas, sekolah ( nama ) ) )')
+      .eq('ortu_id', user.id)
+
+    if (error || !data) {
+      sembunyiSemua(); elError.style.display = 'flex'
+    } else {
+      // Kumpulkan kelas unik dari anak-anak
+      const peta = {}
+      data.forEach(r => {
+        const k = r.murid?.kelas
+        if (k && !peta[k.id]) peta[k.id] = { id: k.id, nama_kelas: k.nama_kelas, sekolah: k.sekolah?.nama || '' }
+      })
+      const kelasList = Object.values(peta)
+      if (kelasList.length === 0) {
+        sembunyiSemua(); elKosong.style.display = 'flex'
+        document.getElementById('kosong-teks').textContent =
+          'Belum ada anak terhubung. Masukkan kode anak di Beranda dulu.'
+        document.getElementById('area-ortu').style.display = 'none'
+      } else {
+        await isiDropdown(sel, kelasList)
+        if (kelasList.length > 1) { sembunyiSemua(); elPilih.style.display = 'flex' }
+      }
+    }
+
+    sel.addEventListener('change', () => { kelasTerpilih = sel.value; muatDaftar() })
+  }
+
+  // ── Bottom nav (beda warna per peran) ──
+  const beranda = peran === 'guru' ? 'beranda-guru.html' : 'beranda-ortu.html'
+  const absensiBtn = peran === 'guru'
+    ? `<button class="nav-item" id="nav-absensi"><span class="nav-icon">✅</span><span class="nav-label">Absensi</span></button>`
+    : ''
+  document.getElementById('bottom-nav').innerHTML = `<div class="bottom-nav-inner">
+    <button class="nav-item" onclick="window.location.href='${beranda}'">
+      <span class="nav-icon">🏠</span><span class="nav-label">Beranda</span>
+    </button>
+    <button class="nav-item aktif">
+      <span class="nav-icon">📢</span><span class="nav-label">Pengumuman</span>
+    </button>
+    ${absensiBtn}
+    <button class="nav-item" onclick="window.location.href='catatan-list.html'">
+      <span class="nav-icon">💬</span><span class="nav-label">Catatan</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='${beranda}'">
+      <span class="nav-icon">👤</span><span class="nav-label">Profil</span>
+    </button>
+  </div>`
+  const absEl = document.getElementById('nav-absensi')
+  if (absEl) absEl.addEventListener('click', () => toast('Absensi akan hadir segera 🌱', 'info'))
+
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = beranda
+  })
+
+  })()
+</script>
+</body>
+</html>

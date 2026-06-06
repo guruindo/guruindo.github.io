@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Kelas</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .info-kelas-box {
+      background: var(--ungu); color: white;
+      padding: 18px 20px;
+      margin: 16px; border-radius: var(--radius-besar);
+    }
+    .info-nama { font-size: 20px; font-weight: 600; font-family: 'Poppins'; }
+    .info-sekolah { font-size: 13px; opacity: 0.85; margin-top: 3px; }
+    .info-stat { font-size: 13px; opacity: 0.9; margin-top: 10px; }
+
+    .baris-murid {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 14px; background: white;
+      border-radius: var(--radius-sedang); margin-bottom: 8px;
+    }
+    .murid-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--ungu-muda);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .murid-info { flex: 1; min-width: 0; }
+    .murid-nama {
+      font-size: 14px; font-weight: 600; color: var(--teks-utama);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .murid-kode {
+      font-size: 12px; color: var(--teks-muted); margin-top: 2px;
+      font-family: monospace; letter-spacing: 0.05em;
+    }
+    .btn-kode {
+      flex-shrink: 0; padding: 7px 12px;
+      background: var(--ungu-muda); color: var(--ungu);
+      border-radius: var(--radius-bulat);
+      font-size: 12px; font-weight: 700;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-kode:active { transform: scale(0.95); }
+    .btn-catatan {
+      flex-shrink: 0; padding: 7px 12px;
+      background: var(--teal-muda); color: var(--teal-gelap);
+      border-radius: var(--radius-bulat);
+      font-size: 12px; font-weight: 700; margin-left: 6px;
+      -webkit-tap-highlight-color: transparent; cursor: pointer;
+    }
+    .btn-catatan:active { transform: scale(0.95); }
+
+    .seksi-judul {
+      font-size: 13px; font-weight: 700; color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin: 4px 4px 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-tambah {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px;
+      background: white; border: 1.5px dashed var(--garis);
+      border-radius: var(--radius-sedang);
+      color: var(--ungu); font-size: 14px; font-weight: 600;
+      margin-top: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-tambah:active { border-color: var(--ungu); }
+
+    /* Bottom sheet */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+    }
+    .sheet {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-radius: 20px 20px 0 0;
+      padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
+      z-index: 101; max-width: 480px; margin: 0 auto;
+      animation: gi-fadein 0.25s ease;
+    }
+    .sheet-handle {
+      width: 36px; height: 4px; background: #E5E7EB;
+      border-radius: 2px; margin: 0 auto 18px;
+    }
+    .sheet-judul { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+
+    /* Tampilan kode besar */
+    .kode-besar {
+      text-align: center; padding: 20px;
+      background: var(--ungu-muda); border-radius: var(--radius-besar);
+      margin-bottom: 16px;
+    }
+    .kode-label { font-size: 12px; color: var(--ungu); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; }
+    .kode-nilai {
+      font-size: 30px; font-weight: 700; color: var(--ungu-gelap);
+      font-family: monospace; letter-spacing: 0.1em; margin-top: 6px;
+    }
+    .kode-anak-nama { font-size: 13px; color: var(--teks-muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="halaman">
+
+  <!-- Header -->
+  <div class="header-halaman">
+    <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+    <span class="header-judul" id="judul-header">Kelas</span>
+  </div>
+
+  <!-- Loading -->
+  <div id="el-loading" style="text-align:center;padding:48px 0;color:var(--teks-muted)">
+    Memuat...
+  </div>
+
+  <!-- Error -->
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-kosong-ikon">😕</div>
+    <div class="state-kosong-judul">Tidak bisa memuat kelas</div>
+    <div class="state-kosong-teks">Cek koneksi internet kamu, lalu coba lagi.</div>
+    <button class="btn btn-utama" id="btn-retry" style="margin-top:4px">Coba Lagi</button>
+  </div>
+
+  <!-- Konten -->
+  <div id="el-konten" style="display:none">
+
+    <!-- Info kelas -->
+    <div class="info-kelas-box">
+      <div class="info-nama" id="info-nama">—</div>
+      <div class="info-sekolah" id="info-sekolah">—</div>
+      <div class="info-stat" id="info-stat">0 murid</div>
+    </div>
+
+    <div class="konten-scroll" style="padding-top:0">
+      <div class="seksi-judul">
+        <span>Daftar Murid</span>
+      </div>
+
+      <!-- Daftar murid -->
+      <div id="daftar-murid"></div>
+
+      <!-- Empty murid -->
+      <div id="murid-kosong" class="state-kosong" style="display:none;padding:32px 24px">
+        <div class="state-kosong-ikon">🧒</div>
+        <div class="state-kosong-judul">Belum ada murid</div>
+        <div class="state-kosong-teks">
+          Tambahkan murid satu per satu. Tiap murid otomatis dapat kode untuk orang tuanya.
+        </div>
+      </div>
+
+      <!-- Tombol tambah -->
+      <button class="btn-tambah" id="btn-tambah-murid">+ Tambah Murid</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sheet: tambah murid -->
+<div class="overlay" id="ov-tambah"></div>
+<div class="sheet" id="sheet-tambah">
+  <div class="sheet-handle"></div>
+  <div class="sheet-judul">Tambah Murid</div>
+  <div class="input-grup" style="margin-bottom:8px">
+    <label class="input-label" for="in-nama-murid">Nama Lengkap Murid</label>
+    <input type="text" id="in-nama-murid" class="input-field"
+      placeholder="Contoh: Budi Santoso" autocomplete="off">
+  </div>
+  <div class="error-kotak" id="err-murid" style="margin-top:8px"></div>
+  <button class="btn btn-utama btn-blok" id="btn-simpan-murid" style="margin-top:14px">
+    Simpan & Buat Kode
+  </button>
+  <button class="btn btn-ghost btn-blok" id="btn-batal-tambah" style="margin-top:4px">
+    Batal
+  </button>
+</div>
+
+<!-- Sheet: tampil kode + bagikan -->
+<div class="overlay" id="ov-kode"></div>
+<div class="sheet" id="sheet-kode">
+  <div class="sheet-handle"></div>
+  <div class="sheet-judul">Kode untuk Orang Tua</div>
+  <div class="kode-besar">
+    <div class="kode-label">Kode Anak</div>
+    <div class="kode-nilai" id="kode-nilai">—</div>
+    <div class="kode-anak-nama" id="kode-nama">—</div>
+  </div>
+  <p style="font-size:13px;color:var(--teks-muted);line-height:1.6;margin-bottom:16px">
+    Bagikan kode ini ke orang tua murid. Mereka memasukkannya di GuruIndo untuk
+    terhubung dengan anaknya.
+  </p>
+  <button class="btn btn-utama btn-blok" id="btn-bagikan">📤 Bagikan ke Orang Tua</button>
+  <button class="btn btn-outline btn-blok" id="btn-salin" style="margin-top:8px">Salin Teks</button>
+  <button class="btn btn-ghost btn-blok" id="btn-tutup-kode" style="margin-top:4px">Tutup</button>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast } from '../js/ui.js'
+
+  ;(async () => {
+
+  // Ambil id kelas dari URL
+  const params = new URLSearchParams(window.location.search)
+  const kelasId = params.get('id')
+  if (!kelasId) { window.location.href = 'beranda-guru.html'; return }
+
+  // Cek sesi
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  let namaKelas = ''
+  let namaSekolah = ''
+
+  // Muat data kelas + murid
+  async function muat() {
+    document.getElementById('el-loading').style.display = 'block'
+    document.getElementById('el-konten').style.display = 'none'
+    document.getElementById('el-error').style.display = 'none'
+
+    // Data kelas
+    const { data: kelas, error: errKelas } = await supabase
+      .from('kelas')
+      .select('nama_kelas, kode_kelas, sekolah(nama)')
+      .eq('id', kelasId)
+      .maybeSingle()
+
+    if (errKelas || !kelas) {
+      document.getElementById('el-loading').style.display = 'none'
+      document.getElementById('el-error').style.display = 'flex'
+      return
+    }
+
+    namaKelas = kelas.nama_kelas
+    namaSekolah = kelas.sekolah?.nama || ''
+
+    document.getElementById('judul-header').textContent = namaKelas
+    document.getElementById('info-nama').textContent = namaKelas
+    document.getElementById('info-sekolah').textContent = namaSekolah
+
+    // Daftar murid
+    const { data: murid, error: errMurid } = await supabase
+      .from('murid')
+      .select('id, nama, kode_anak')
+      .eq('kelas_id', kelasId)
+      .order('nama', { ascending: true })
+
+    document.getElementById('el-loading').style.display = 'none'
+    document.getElementById('el-konten').style.display = 'block'
+
+    if (errMurid) {
+      document.getElementById('el-error').style.display = 'flex'
+      document.getElementById('el-konten').style.display = 'none'
+      return
+    }
+
+    const jumlah = murid ? murid.length : 0
+    document.getElementById('info-stat').textContent = jumlah + ' murid'
+
+    const kontainer = document.getElementById('daftar-murid')
+    kontainer.innerHTML = ''
+
+    if (jumlah === 0) {
+      document.getElementById('murid-kosong').style.display = 'flex'
+    } else {
+      document.getElementById('murid-kosong').style.display = 'none'
+      murid.forEach(m => {
+        const baris = document.createElement('div')
+        baris.className = 'baris-murid'
+        baris.innerHTML = `
+          <div class="murid-avatar">🧒</div>
+          <div class="murid-info">
+            <div class="murid-nama">${m.nama}</div>
+            <div class="murid-kode">${m.kode_anak}</div>
+          </div>
+          <div class="btn-kode">Kode</div>
+          <div class="btn-catatan">Catatan</div>
+        `
+        baris.querySelector('.btn-kode')
+          .addEventListener('click', () => bukaKode(m.nama, m.kode_anak))
+        baris.querySelector('.btn-catatan')
+          .addEventListener('click', () => {
+            window.location.href = 'catatan-thread.html?murid=' + m.id
+          })
+        kontainer.appendChild(baris)
+      })
+    }
+  }
+
+  muat()
+  window.muatUlang = muat
+
+  // ── Sheet tambah murid ──
+  const ovTambah = document.getElementById('ov-tambah')
+  const sheetTambah = document.getElementById('sheet-tambah')
+  const inNama = document.getElementById('in-nama-murid')
+
+  function bukaTambah() {
+    document.getElementById('err-murid').classList.remove('tampil')
+    inNama.value = ''
+    ovTambah.style.display = 'block'
+    sheetTambah.style.display = 'block'
+    setTimeout(() => inNama.focus(), 300)
+  }
+  function tutupTambah() {
+    ovTambah.style.display = 'none'
+    sheetTambah.style.display = 'none'
+  }
+
+  document.getElementById('btn-tambah-murid').addEventListener('click', bukaTambah)
+  document.getElementById('btn-batal-tambah').addEventListener('click', tutupTambah)
+  ovTambah.addEventListener('click', tutupTambah)
+
+  inNama.addEventListener('keydown', e => { if (e.key === 'Enter') simpanMurid() })
+
+  document.getElementById('btn-simpan-murid').addEventListener('click', simpanMurid)
+
+  async function simpanMurid() {
+    const nama = inNama.value.trim()
+    const errEl = document.getElementById('err-murid')
+
+    if (!nama) {
+      errEl.textContent = 'Nama murid belum diisi.'
+      errEl.classList.add('tampil')
+      return
+    }
+
+    const btn = document.getElementById('btn-simpan-murid')
+    btn.disabled = true
+    btn.textContent = 'Menyimpan...'
+    errEl.classList.remove('tampil')
+
+    const { data: kode, error } = await supabase
+      .rpc('tambah_murid', { p_kelas_id: kelasId, p_nama: nama })
+
+    btn.disabled = false
+    btn.textContent = 'Simpan & Buat Kode'
+
+    if (error) {
+      errEl.textContent = 'Gagal menyimpan: ' + (error.message || 'coba lagi')
+      errEl.classList.add('tampil')
+      console.error('tambah_murid:', error)
+      return
+    }
+
+    tutupTambah()
+    // Langsung tampilkan kode yang baru dibuat
+    bukaKode(nama, kode)
+    // Refresh daftar
+    muat()
+  }
+
+  // ── Sheet tampil kode + bagikan ──
+  const ovKode = document.getElementById('ov-kode')
+  const sheetKode = document.getElementById('sheet-kode')
+  let kodeAktif = ''
+  let namaAktif = ''
+
+  function bukaKode(nama, kode) {
+    kodeAktif = kode
+    namaAktif = nama
+    document.getElementById('kode-nilai').textContent = kode
+    document.getElementById('kode-nama').textContent = 'untuk ' + nama
+    ovKode.style.display = 'block'
+    sheetKode.style.display = 'block'
+  }
+  function tutupKode() {
+    ovKode.style.display = 'none'
+    sheetKode.style.display = 'none'
+  }
+
+  document.getElementById('btn-tutup-kode').addEventListener('click', tutupKode)
+  ovKode.addEventListener('click', tutupKode)
+
+  function teksBagikan() {
+    return `Halo Bapak/Ibu wali murid ${namaAktif} 🙏\n\n`
+      + `Untuk memantau informasi sekolah ${namaAktif} di ${namaKelas}`
+      + (namaSekolah ? ` (${namaSekolah})` : '') + `, silakan gunakan aplikasi GuruIndo:\n\n`
+      + `1. Buka: https://guruindo.netlify.app\n`
+      + `2. Daftar sebagai Orang Tua\n`
+      + `3. Masukkan kode anak: ${kodeAktif}\n\n`
+      + `Terima kasih 😊`
+  }
+
+  // Bagikan (pakai Web Share API kalau tersedia, fallback ke salin)
+  document.getElementById('btn-bagikan').addEventListener('click', async () => {
+    const teks = teksBagikan()
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: teks })
+      } catch (e) {
+        // user batal share — diamkan
+      }
+    } else {
+      // Fallback: salin
+      salinTeks(teks)
+    }
+  })
+
+  document.getElementById('btn-salin').addEventListener('click', () => {
+    salinTeks(teksBagikan())
+  })
+
+  async function salinTeks(teks) {
+    try {
+      await navigator.clipboard.writeText(teks)
+      toast('Teks disalin! Tinggal tempel di WhatsApp 📋', 'sukses')
+    } catch (e) {
+      // Fallback lama
+      const ta = document.createElement('textarea')
+      ta.value = teks
+      document.body.appendChild(ta)
+      ta.select()
+      try { document.execCommand('copy'); toast('Teks disalin! 📋', 'sukses') }
+      catch (e2) { toast('Gagal menyalin. Salin manual ya.', 'info') }
+      document.body.removeChild(ta)
+    }
+  }
+
+  // Navigasi
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = 'beranda-guru.html'
+  })
+  document.getElementById('btn-retry').addEventListener('click', muat)
+
+  })()
+</script>
+</body>
+</html>

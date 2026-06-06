@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Masuk</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: white; }
+    .auth-wrap {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 40px 24px 32px;
+      padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .auth-logo-teks {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ungu);
+    }
+    .auth-judul {
+      font-size: 23px;
+      font-weight: 600;
+      color: var(--teks-utama);
+      margin-bottom: 6px;
+    }
+    .auth-sub {
+      font-size: 14px;
+      color: var(--teks-muted);
+      margin-bottom: 28px;
+      line-height: 1.55;
+    }
+    .form-grup { display: flex; flex-direction: column; gap: 14px; }
+    .lupa-sandi {
+      font-size: 13px;
+      color: var(--ungu);
+      text-align: right;
+      margin-top: -6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="9" fill="#534AB7"/>
+      <path d="M9 27 L18 11 L27 27" stroke="white" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M13 21 L23 21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="18" cy="30" r="2.5" fill="#1D9E75"/>
+    </svg>
+    <span class="auth-logo-teks">GuruIndo</span>
+  </div>
+
+  <!-- Judul dinamis -->
+  <div id="jdl-daftar" style="display:none">
+    <h1 class="auth-judul">Selamat datang 👋</h1>
+    <p class="auth-sub">Buat akun untuk mulai menghubungkan sekolah dan rumah.</p>
+  </div>
+  <div id="jdl-masuk">
+    <h1 class="auth-judul">Senang berjumpa lagi 😊</h1>
+    <p class="auth-sub">Silakan masuk untuk melanjutkan.</p>
+  </div>
+
+  <!-- Tab daftar / masuk -->
+  <div class="tab-wrap" style="margin-bottom:24px">
+    <div class="tab" id="tab-daftar" onclick="ganti('daftar')">Daftar</div>
+    <div class="tab aktif" id="tab-masuk" onclick="ganti('masuk')">Masuk</div>
+  </div>
+
+  <!-- Kotak error -->
+  <div class="error-kotak" id="err" style="margin-bottom:16px"></div>
+
+  <!-- Form daftar -->
+  <div id="fdaftar" style="display:none">
+    <div class="form-grup">
+      <div class="input-grup">
+        <label class="input-label">Nama lengkap</label>
+        <input class="input-field" type="text" id="d-nama"
+          placeholder="Nama kamu" autocomplete="name">
+      </div>
+      <div class="input-grup">
+        <label class="input-label">Email</label>
+        <input class="input-field" type="email" id="d-email"
+          placeholder="email@contoh.com" autocomplete="email">
+      </div>
+      <div class="input-grup">
+        <label class="input-label">Kata sandi</label>
+        <input class="input-field" type="password" id="d-sandi"
+          placeholder="Minimal 8 karakter" autocomplete="new-password">
+      </div>
+      <button class="btn btn-utama btn-blok" style="margin-top:4px"
+        onclick="daftar()">Buat akun</button>
+    </div>
+  </div>
+
+  <!-- Form masuk -->
+  <div id="fmasuk">
+    <div class="form-grup">
+      <div class="input-grup">
+        <label class="input-label">Email</label>
+        <input class="input-field" type="email" id="m-email"
+          placeholder="email@contoh.com" autocomplete="email">
+      </div>
+      <div class="input-grup">
+        <label class="input-label">Kata sandi</label>
+        <input class="input-field" type="password" id="m-sandi"
+          placeholder="Kata sandi kamu" autocomplete="current-password">
+        <div class="lupa-sandi" onclick="lupaSandi()">Lupa kata sandi?</div>
+      </div>
+      <button class="btn btn-utama btn-blok" style="margin-top:4px"
+        onclick="masuk()">Masuk</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast, loading } from '../js/ui.js'
+
+  // Kalau sudah login, redirect langsung
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) { window.location.href = '../index.html'; }
+
+  function err(pesan) {
+    const el = document.getElementById('err')
+    el.textContent = pesan
+    el.classList.add('tampil')
+  }
+  function clearErr() {
+    document.getElementById('err').classList.remove('tampil')
+  }
+
+  window.ganti = function(tab) {
+    const d = tab === 'daftar'
+    document.getElementById('tab-daftar').classList.toggle('aktif', d)
+    document.getElementById('tab-masuk').classList.toggle('aktif', !d)
+    document.getElementById('fdaftar').style.display = d ? 'block' : 'none'
+    document.getElementById('fmasuk').style.display  = d ? 'none' : 'block'
+    document.getElementById('jdl-daftar').style.display = d ? 'block' : 'none'
+    document.getElementById('jdl-masuk').style.display  = d ? 'none' : 'block'
+    clearErr()
+  }
+
+  window.daftar = async function() {
+    const nama  = document.getElementById('d-nama').value.trim()
+    const email = document.getElementById('d-email').value.trim()
+    const sandi = document.getElementById('d-sandi').value
+    clearErr()
+
+    if (!nama)          return err('Nama lengkap belum diisi nih.')
+    if (!email)         return err('Email belum diisi nih.')
+    if (sandi.length < 8) return err('Kata sandi minimal 8 karakter ya.')
+
+    loading(true, 'Membuat akun...')
+    const { data, error } = await supabase.auth.signUp({
+      email, password: sandi,
+      options: { data: { nama } }
+    })
+    loading(false)
+
+    if (error) {
+      if (error.message.includes('already registered'))
+        return err('Email ini sudah terdaftar. Coba masuk ya.')
+      return err('Aduh, ada yang tidak beres. Coba lagi ya?')
+    }
+
+    // Simpan nama sementara untuk pilih-peran
+    localStorage.setItem('gi_nama_tmp', nama)
+
+    if (data.session) {
+      // Email confirmation dimatikan — langsung lanjut
+      toast('Akun berhasil dibuat! 🎉', 'sukses')
+      setTimeout(() => { window.location.href = 'pilih-peran.html' }, 700)
+    } else {
+      // Email confirmation aktif — minta cek inbox
+      toast('Cek emailmu untuk konfirmasi dulu ya 📩', 'info')
+      document.getElementById('fdaftar').innerHTML = `
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">📩</div>
+          <p style="font-size:14px;color:var(--teks-muted);line-height:1.6">
+            Link konfirmasi sudah dikirim ke <strong>${email}</strong>.<br>
+            Klik link di email lalu buka app lagi ya.
+          </p>
+        </div>
+      `
+    }
+  }
+
+  window.masuk = async function() {
+    const email = document.getElementById('m-email').value.trim()
+    const sandi = document.getElementById('m-sandi').value
+    clearErr()
+
+    if (!email) return err('Email belum diisi nih.')
+    if (!sandi) return err('Kata sandi belum diisi nih.')
+
+    loading(true, 'Sedang masuk...')
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: sandi })
+    loading(false)
+
+    if (error) {
+      if (error.message.includes('Invalid login'))
+        return err('Email atau kata sandi kurang tepat.')
+      if (error.message.includes('Email not confirmed'))
+        return err('Email belum dikonfirmasi. Cek inbox dulu ya.')
+      return err('Aduh, ada yang tidak beres. Coba lagi ya?')
+    }
+
+    // Cek apakah sudah punya profil
+    const { data: profil } = await supabase
+      .from('profil').select('peran').eq('id', data.user.id).maybeSingle()
+
+    if (!profil) {
+      window.location.href = 'pilih-peran.html'
+    } else if (profil.peran === 'guru') {
+      window.location.href = 'beranda-guru.html'
+    } else {
+      window.location.href = 'beranda-ortu.html'
+    }
+  }
+
+  window.lupaSandi = async function() {
+    const email = document.getElementById('m-email').value.trim()
+    if (!email) return err('Isi email dulu, nanti kami kirim link reset.')
+    loading(true, 'Mengirim email...')
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    loading(false)
+    if (error) return err('Gagal kirim email. Coba lagi ya?')
+    toast('Link reset sudah dikirim! Cek inbox kamu 📩', 'sukses')
+  }
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return
+    const daftarVisible = document.getElementById('fdaftar').style.display !== 'none'
+    daftarVisible ? window.daftar() : window.masuk()
+  })
+</script>
+</body>
+</html>

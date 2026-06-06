@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Kamu Siapa?</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+    .wrap {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 48px 24px 32px;
+      padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    }
+    .kartu-peran {
+      background: white;
+      border-radius: var(--radius-besar);
+      padding: 20px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .kartu-peran:active { transform: scale(0.98); }
+    .kartu-peran.dipilih-guru {
+      border-color: var(--ungu);
+      background: #FAFAFE;
+    }
+    .kartu-peran.dipilih-ortu {
+      border-color: var(--teal);
+      background: #FAFFFE;
+    }
+    .ikon-peran {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .peran-teks { flex: 1; }
+    .peran-nama { font-size: 15px; font-weight: 600; color: var(--teks-utama); margin-bottom: 3px; }
+    .peran-desc { font-size: 13px; color: var(--teks-muted); line-height: 1.4; }
+    .centang {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--garis);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 11px;
+      color: transparent;
+    }
+    .dipilih-guru .centang { background: var(--ungu); border-color: var(--ungu); color: white; }
+    .dipilih-ortu .centang { background: var(--teal); border-color: var(--teal); color: white; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Ikon kecil GuruIndo -->
+  <div style="width:40px;height:40px;background:#EEEDFE;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:24px">
+    <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+      <path d="M9 27 L18 11 L27 27" stroke="#534AB7" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M13 21 L23 21" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <h1 style="font-size:22px;font-weight:600;color:var(--teks-utama);margin-bottom:8px">
+    Kamu siapa nih? 😊
+  </h1>
+  <p style="font-size:14px;color:var(--teks-muted);margin-bottom:28px;line-height:1.6">
+    Pilih peranmu supaya GuruIndo bisa menyesuaikan tampilan yang pas buat kamu.
+  </p>
+
+  <!-- Kartu Guru -->
+  <div class="kartu-peran" id="k-guru" onclick="pilih('guru')" style="margin-bottom:12px">
+    <div class="ikon-peran" style="background:#EEEDFE">📚</div>
+    <div class="peran-teks">
+      <div class="peran-nama">Guru / Wali Kelas</div>
+      <div class="peran-desc">Saya mengajar dan ingin berkomunikasi dengan orang tua murid</div>
+    </div>
+    <div class="centang" id="c-guru">✓</div>
+  </div>
+
+  <!-- Kartu Ortu -->
+  <div class="kartu-peran" id="k-ortu" onclick="pilih('ortu')">
+    <div class="ikon-peran" style="background:var(--teal-muda)">👨‍👩‍👧</div>
+    <div class="peran-teks">
+      <div class="peran-nama">Orang Tua / Wali Murid</div>
+      <div class="peran-desc">Saya ingin memantau perkembangan anak di sekolah</div>
+    </div>
+    <div class="centang" id="c-ortu">✓</div>
+  </div>
+
+  <div style="flex:1"></div>
+
+  <!-- Kotak error -->
+  <div class="error-kotak" id="err" style="margin-bottom:12px"></div>
+
+  <button class="btn btn-utama btn-blok" id="btn-lanjut"
+    disabled style="opacity:0.4" onclick="lanjut()">
+    Lanjut
+  </button>
+
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast, loading } from '../js/ui.js'
+
+  // Pastikan sudah login
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; }
+
+  let dipilih = null
+
+  window.pilih = function(peran) {
+    dipilih = peran
+
+    // Reset semua
+    document.getElementById('k-guru').className = 'kartu-peran'
+    document.getElementById('k-ortu').className = 'kartu-peran'
+
+    // Tandai yang dipilih
+    if (peran === 'guru') {
+      document.getElementById('k-guru').classList.add('dipilih-guru')
+    } else {
+      document.getElementById('k-ortu').classList.add('dipilih-ortu')
+    }
+
+    // Aktifkan tombol lanjut
+    const btn = document.getElementById('btn-lanjut')
+    btn.disabled = false
+    btn.style.opacity = '1'
+    document.getElementById('err').classList.remove('tampil')
+  }
+
+  window.lanjut = async function() {
+    if (!dipilih) return
+
+    loading(true, 'Menyimpan profil...')
+
+    // Ambil nama dari metadata user atau dari localStorage (simpan saat daftar)
+    const nama = user.user_metadata?.nama
+      || localStorage.getItem('gi_nama_tmp')
+      || 'Pengguna GuruIndo'
+
+    const { error } = await supabase.from('profil').insert({
+      id: user.id,
+      nama: nama,
+      peran: dipilih
+    })
+
+    loading(false)
+
+    if (error) {
+      // Kalau sudah ada (misalnya user balik ke sini), update saja
+      if (error.code === '23505') {
+        const { error: errUpdate } = await supabase
+          .from('profil')
+          .update({ peran: dipilih })
+          .eq('id', user.id)
+
+        if (errUpdate) {
+          document.getElementById('err').textContent =
+            'Aduh, gagal menyimpan. Coba lagi ya?'
+          document.getElementById('err').classList.add('tampil')
+          return
+        }
+      } else {
+        document.getElementById('err').textContent =
+          'Aduh, ada yang tidak beres. Coba lagi ya?'
+        document.getElementById('err').classList.add('tampil')
+        return
+      }
+    }
+
+    localStorage.removeItem('gi_nama_tmp')
+    toast('Profil tersimpan! 🌱', 'sukses')
+
+    setTimeout(() => {
+      window.location.href = dipilih === 'guru'
+        ? 'beranda-guru.html'
+        : 'beranda-ortu.html'
+    }, 700)
+  }
+</script>
+</body>
+</html>

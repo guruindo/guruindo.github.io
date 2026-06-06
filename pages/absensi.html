@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#534AB7">
+  <title>GuruIndo — Absensi</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    .header-halaman {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--ungu); color: white;
+      padding: 16px 14px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+    }
+    .btn-kembali {
+      width: 36px; height: 36px; border: none; background: none;
+      color: white; font-size: 22px; cursor: pointer; border-radius: 50%;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .header-judul { font-size: 16px; font-weight: 600; font-family: 'Poppins'; }
+
+    .konten { max-width: 480px; margin: 0 auto; padding: 16px;
+      padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+
+    .seksi-judul {
+      font-size: 13px; font-weight: 700; color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin: 4px 4px 10px;
+    }
+
+    /* Kartu kelas (pemilihan) */
+    .kartu-kelas {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .kartu-kelas:active { transform: scale(0.98); }
+    .ikon-kelas { width: 46px; height: 46px; border-radius: 13px; background: var(--ungu-muda);
+      display: flex; align-items: center; justify-content: center; font-size: 21px; flex-shrink: 0; }
+    .nama-kelas { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .meta-kelas { font-size: 12px; color: var(--teks-muted); margin-top: 3px; }
+
+    /* Banner tanggal & keadaan */
+    .banner-hari {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 14px;
+    }
+    .banner-tgl { font-size: 15px; font-weight: 700; color: var(--teks-utama); }
+    .banner-sub { font-size: 12px; color: var(--teks-muted); margin-top: 3px; }
+    .banner-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; padding: 5px 12px;
+      border-radius: var(--radius-bulat); margin-top: 10px;
+    }
+    .st-belum   { background: #FEF3C7; color: #92400E; }
+    .st-ditutup { background: var(--teal-muda); color: var(--teal-gelap); }
+    .st-libur   { background: #E2E8F0; color: var(--teks-muted); }
+
+    /* Baris murid */
+    .baris-murid {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: white;
+      border-radius: var(--radius-sedang); margin-bottom: 8px;
+    }
+    .murid-avatar { width: 38px; height: 38px; border-radius: 50%;
+      background: var(--ungu-muda); display: flex; align-items: center;
+      justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .murid-info { flex: 1; min-width: 0; }
+    .murid-nama { font-size: 14px; font-weight: 600; color: var(--teks-utama);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .murid-status-kecil { font-size: 12px; margin-top: 2px; font-weight: 600; }
+
+    /* Chip status pada baris (hadir default abu, lainnya berwarna) */
+    .chip-pick {
+      flex-shrink: 0; padding: 7px 12px; border-radius: var(--radius-bulat);
+      font-size: 12px; font-weight: 700; cursor: pointer; border: none;
+      background: var(--bg-abu); color: var(--teks-muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip-pick:active { transform: scale(0.95); }
+    .chip-hadir { background: var(--teal-muda); color: var(--teal-gelap); }
+    .chip-izin  { background: #DBEAFE; color: #1E40AF; }
+    .chip-sakit { background: #FEF3C7; color: #92400E; }
+    .chip-alpa  { background: #FEE2E2; color: #B91C1C; }
+
+    .c-hadir { color: var(--teal-gelap); }
+    .c-izin  { color: #1E40AF; }
+    .c-sakit { color: #92400E; }
+    .c-alpa  { color: #B91C1C; }
+    .c-belum { color: var(--teks-ringan); }
+
+    /* Bar aksi bawah (tutup / buka / libur) */
+    .bar-aksi {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid var(--garis);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; gap: 8px;
+      max-width: 480px; margin: 0 auto; z-index: 40;
+    }
+    .baris-tombol { display: flex; gap: 8px; }
+    .baris-tombol .btn { flex: 1; }
+
+    /* Bottom sheet pilih status */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.38); z-index: 100; }
+    .sheet {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-radius: 20px 20px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      z-index: 101; max-width: 480px; margin: 0 auto;
+    }
+    .sheet-handle { width: 36px; height: 4px; background: #E5E7EB; border-radius: 2px; margin: 0 auto 16px; }
+    .sheet-judul { font-size: 16px; font-weight: 700; color: var(--teks-utama); margin-bottom: 4px; }
+    .sheet-sub { font-size: 13px; color: var(--teks-muted); margin-bottom: 16px; }
+    .pilih-status { display: flex; flex-direction: column; gap: 8px; }
+    .opsi-status {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 14px; border-radius: var(--radius-sedang);
+      border: 1.5px solid var(--garis); background: white;
+      cursor: pointer; font-size: 14px; font-weight: 600; color: var(--teks-utama);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .opsi-status:active { transform: scale(0.98); }
+    .opsi-ikon { font-size: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="header-halaman">
+  <button class="btn-kembali" id="btn-kembali" aria-label="Kembali">←</button>
+  <span class="header-judul" id="judul-header">Absensi</span>
+</div>
+
+<!-- Loading -->
+<div id="el-loading" style="text-align:center;padding:48px 0;color:var(--teks-muted)">Memuat...</div>
+
+<!-- Error -->
+<div id="el-error" class="state-kosong" style="display:none">
+  <div class="state-kosong-ikon">😕</div>
+  <div class="state-kosong-judul">Tidak bisa memuat</div>
+  <div class="state-kosong-teks">Cek koneksi internet kamu, lalu coba lagi.</div>
+  <button class="btn btn-utama" id="btn-retry" style="margin-top:4px">Coba Lagi</button>
+</div>
+
+<!-- TAMPILAN A: pilih kelas -->
+<div id="view-pilih" class="konten" style="display:none">
+  <div class="seksi-judul">Pilih Kelas untuk Diabsen</div>
+  <div id="daftar-kelas"></div>
+  <div id="kelas-kosong" class="state-kosong" style="display:none;padding:32px 24px">
+    <div class="state-kosong-ikon">🏫</div>
+    <div class="state-kosong-judul">Belum ada kelas</div>
+    <div class="state-kosong-teks">Daftarkan kelas dulu di beranda sebelum mengisi absensi.</div>
+  </div>
+</div>
+
+<!-- TAMPILAN B: absen 1 kelas -->
+<div id="view-absen" class="konten" style="display:none">
+
+  <div class="banner-hari">
+    <div class="banner-tgl" id="banner-tgl">—</div>
+    <div class="banner-sub" id="banner-sub">Tandai hanya yang tidak masuk. Sisanya otomatis hadir.</div>
+    <span class="banner-status st-belum" id="banner-status">Belum dikunci</span>
+  </div>
+
+  <!-- Pesan hari Minggu / libur -->
+  <div id="hari-tutup" class="state-kosong" style="display:none;padding:32px 24px">
+    <div class="state-kosong-ikon" id="tutup-ikon">🌴</div>
+    <div class="state-kosong-judul" id="tutup-judul">Hari libur</div>
+    <div class="state-kosong-teks" id="tutup-teks">Tidak ada absensi hari ini.</div>
+    <button class="btn btn-outline" id="btn-batal-libur" style="margin-top:4px;display:none">
+      Batalkan libur
+    </button>
+  </div>
+
+  <!-- Daftar murid -->
+  <div id="wrap-murid">
+    <div class="seksi-judul" id="judul-daftar">Daftar Murid</div>
+    <div id="daftar-murid"></div>
+  </div>
+</div>
+
+<!-- Bar aksi bawah -->
+<div class="bar-aksi" id="bar-aksi" style="display:none">
+  <div class="baris-tombol" id="baris-tutup">
+    <button class="btn btn-outline" id="btn-libur">Hari ini libur</button>
+    <button class="btn btn-teal" id="btn-tutup">✓ Tutup Absensi Hari Ini</button>
+  </div>
+  <div class="baris-tombol" id="baris-buka" style="display:none">
+    <button class="btn btn-ghost" id="btn-buka">Buka kembali untuk ralat</button>
+  </div>
+</div>
+
+<!-- Sheet pilih status -->
+<div class="overlay" id="ov-status"></div>
+<div class="sheet" id="sheet-status">
+  <div class="sheet-handle"></div>
+  <div class="sheet-judul" id="sheet-nama">Murid</div>
+  <div class="sheet-sub">Pilih status kehadiran hari ini.</div>
+  <div class="pilih-status">
+    <button class="opsi-status" data-status="hadir"><span class="opsi-ikon">✅</span> Hadir</button>
+    <button class="opsi-status" data-status="izin"><span class="opsi-ikon">📝</span> Izin</button>
+    <button class="opsi-status" data-status="sakit"><span class="opsi-ikon">🤒</span> Sakit</button>
+    <button class="opsi-status" data-status="alpa"><span class="opsi-ikon">❗</span> Alpa (tanpa kabar)</button>
+  </div>
+  <button class="btn btn-ghost btn-blok" id="btn-batal-status" style="margin-top:10px">Batal</button>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast, konfirmasi } from '../js/ui.js'
+
+  ;(async () => {
+
+  // ── Sesi & peran ──
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { window.location.href = 'masuk.html'; return }
+
+  const { data: profil } = await supabase
+    .from('profil').select('peran').eq('id', user.id).maybeSingle()
+  if (!profil) { window.location.href = 'pilih-peran.html'; return }
+  if (profil.peran === 'ortu') { window.location.href = 'beranda-ortu.html'; return }
+
+  const params = new URLSearchParams(window.location.search)
+  let kelasId = params.get('kelas')
+
+  const LABEL = { hadir: 'Hadir', izin: 'Izin', sakit: 'Sakit', alpa: 'Alpa' }
+  const CHIP  = { hadir: 'chip-hadir', izin: 'chip-izin', sakit: 'chip-sakit', alpa: 'chip-alpa' }
+  const CTEKS = { hadir: 'c-hadir', izin: 'c-izin', sakit: 'c-sakit', alpa: 'c-alpa' }
+
+  function show(id)  { document.getElementById(id).style.display = '' }
+  function hide(id)  { document.getElementById(id).style.display = 'none' }
+  function tampilError() {
+    hide('el-loading'); hide('view-pilih'); hide('view-absen'); hide('bar-aksi')
+    document.getElementById('el-error').style.display = 'flex'
+  }
+
+  document.getElementById('btn-kembali').addEventListener('click', () => {
+    window.location.href = 'beranda-guru.html'
+  })
+  document.getElementById('btn-retry').addEventListener('click', () => location.reload())
+
+  // ════════ TAMPILAN A: pilih kelas ════════
+  async function muatPilihKelas() {
+    hide('el-error'); hide('view-absen'); hide('bar-aksi')
+    show('el-loading')
+
+    const { data, error } = await supabase
+      .from('guru_kelas')
+      .select('kelas ( id, nama_kelas, sekolah ( nama ) )')
+      .eq('guru_id', user.id)
+
+    hide('el-loading')
+    if (error) { tampilError(); return }
+
+    const kontainer = document.getElementById('daftar-kelas')
+    kontainer.innerHTML = ''
+    show('view-pilih')
+
+    const kelasList = (data || []).map(g => g.kelas).filter(Boolean)
+    if (kelasList.length === 0) {
+      document.getElementById('kelas-kosong').style.display = 'flex'
+      return
+    }
+    document.getElementById('kelas-kosong').style.display = 'none'
+
+    kelasList.forEach(k => {
+      const el = document.createElement('div')
+      el.className = 'kartu-kelas'
+      el.innerHTML = `
+        <div class="ikon-kelas">📋</div>
+        <div style="flex:1;min-width:0">
+          <div class="nama-kelas">${k.nama_kelas}</div>
+          <div class="meta-kelas">${k.sekolah?.nama || ''}</div>
+        </div>
+        <span style="color:var(--teks-ringan);font-size:18px">›</span>`
+      el.addEventListener('click', () => {
+        window.location.href = 'absensi.html?kelas=' + k.id
+      })
+      kontainer.appendChild(el)
+    })
+  }
+
+  // ════════ TAMPILAN B: absen 1 kelas ════════
+  let keadaanHari = 'belum'   // 'belum' | 'ditutup' | 'libur'
+  let isMinggu = false
+  let muridCache = []
+
+  function tglIndo(d) {
+    const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu']
+    const bln  = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+                  'Agustus','September','Oktober','November','Desember']
+    return `${hari[d.getDay()]}, ${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`
+  }
+
+  async function muatAbsen() {
+    hide('el-error'); hide('view-pilih')
+    show('el-loading'); hide('view-absen'); hide('bar-aksi')
+
+    // Nama kelas untuk judul
+    const { data: kelas } = await supabase
+      .from('kelas').select('nama_kelas').eq('id', kelasId).maybeSingle()
+    if (kelas) document.getElementById('judul-header').textContent =
+      'Absensi · ' + kelas.nama_kelas
+
+    // Rekap hari ini (server-side date di dalam fungsi)
+    const { data, error } = await supabase
+      .rpc('rekap_absensi_hari', { p_kelas_id: kelasId, p_tanggal: null })
+
+    hide('el-loading')
+    if (error) { console.error('rekap_absensi_hari:', error); tampilError(); return }
+
+    show('view-absen')
+    muridCache = data || []
+
+    // Tanggal & keadaan diambil dari baris pertama (semua baris sama)
+    keadaanHari = muridCache[0]?.keadaan || 'belum'
+    isMinggu    = !!muridCache[0]?.is_minggu
+    // Jika kelas kosong, rekap kosong -> pakai tanggal device hanya utk tampilan
+    const tglStr = muridCache[0]?.tanggal
+    const tgl = tglStr ? new Date(tglStr + 'T00:00:00') : new Date()
+    document.getElementById('banner-tgl').textContent = tglIndo(tgl)
+
+    renderKeadaan()
+  }
+
+  function renderKeadaan() {
+    const banner = document.getElementById('banner-status')
+    const barTutup = document.getElementById('baris-tutup')
+    const barBuka  = document.getElementById('baris-buka')
+    show('bar-aksi')
+
+    // Hari Minggu: tidak bisa absen sama sekali
+    if (isMinggu) {
+      hide('wrap-murid')
+      document.getElementById('hari-tutup').style.display = 'flex'
+      document.getElementById('tutup-ikon').textContent = '🛌'
+      document.getElementById('tutup-judul').textContent = 'Hari Minggu — libur'
+      document.getElementById('tutup-teks').textContent = 'Absensi otomatis dilewati di hari Minggu.'
+      document.getElementById('btn-batal-libur').style.display = 'none'
+      hide('bar-aksi')
+      return
+    }
+
+    // Hari ditandai libur (manual)
+    if (keadaanHari === 'libur') {
+      hide('wrap-murid')
+      document.getElementById('hari-tutup').style.display = 'flex'
+      document.getElementById('tutup-ikon').textContent = '🌴'
+      document.getElementById('tutup-judul').textContent = 'Hari ini diliburkan'
+      document.getElementById('tutup-teks').textContent = 'Tidak ada absensi yang dicatat hari ini.'
+      document.getElementById('btn-batal-libur').style.display = ''
+      hide('bar-aksi')
+      return
+    }
+
+    // Hari kerja normal
+    document.getElementById('hari-tutup').style.display = 'none'
+    show('wrap-murid')
+
+    if (keadaanHari === 'ditutup') {
+      banner.className = 'banner-status st-ditutup'
+      banner.textContent = '✓ Sudah dikunci'
+      document.getElementById('banner-sub').textContent =
+        'Sudah ditutup. Murid tanpa tanda tercatat hadir. Bisa diralat kapan saja.'
+      barTutup.style.display = 'none'
+      barBuka.style.display = 'flex'
+    } else {
+      banner.className = 'banner-status st-belum'
+      banner.textContent = '● Belum dikunci'
+      document.getElementById('banner-sub').textContent =
+        'Tandai hanya yang tidak masuk. Sisanya otomatis hadir saat ditutup.'
+      barTutup.style.display = 'flex'
+      barBuka.style.display = 'none'
+    }
+
+    renderMurid()
+  }
+
+  function renderMurid() {
+    const kontainer = document.getElementById('daftar-murid')
+    kontainer.innerHTML = ''
+
+    if (muridCache.length === 0) {
+      kontainer.innerHTML =
+        '<div class="state-kosong" style="padding:32px 24px">' +
+        '<div class="state-kosong-ikon">🧒</div>' +
+        '<div class="state-kosong-judul">Belum ada murid</div>' +
+        '<div class="state-kosong-teks">Tambahkan murid di halaman kelas dulu.</div></div>'
+      document.getElementById('bar-aksi').style.display = 'none'
+      return
+    }
+
+    muridCache.forEach(m => {
+      // status null = belum ditandai. Sebelum tutup tampil sbg "Hadir (default)".
+      const status = m.status || (keadaanHari === 'ditutup' ? 'hadir' : null)
+      const tampilStatus = status || 'hadir'
+      const teksKecil = status
+        ? LABEL[status]
+        : 'Hadir (otomatis)'
+      const kelasTeks = status ? CTEKS[status] : 'c-belum'
+
+      const baris = document.createElement('div')
+      baris.className = 'baris-murid'
+      baris.innerHTML = `
+        <div class="murid-avatar">🧒</div>
+        <div class="murid-info">
+          <div class="murid-nama">${m.nama}</div>
+          <div class="murid-status-kecil ${kelasTeks}">${teksKecil}</div>
+        </div>
+        <button class="chip-pick ${status ? CHIP[status] : ''}">
+          ${status ? LABEL[status] : 'Tandai'}
+        </button>`
+      baris.querySelector('.chip-pick')
+        .addEventListener('click', () => bukaSheet(m.murid_id, m.nama, tampilStatus))
+      kontainer.appendChild(baris)
+    })
+  }
+
+  // ── Sheet pilih status ──
+  let muridAktif = null
+  const ovStatus = document.getElementById('ov-status')
+  const sheetStatus = document.getElementById('sheet-status')
+
+  function bukaSheet(murid_id, nama, statusSekarang) {
+    muridAktif = murid_id
+    document.getElementById('sheet-nama').textContent = nama
+    ovStatus.style.display = 'block'
+    sheetStatus.style.display = 'block'
+  }
+  function tutupSheet() {
+    ovStatus.style.display = 'none'
+    sheetStatus.style.display = 'none'
+    muridAktif = null
+  }
+  ovStatus.addEventListener('click', tutupSheet)
+  document.getElementById('btn-batal-status').addEventListener('click', tutupSheet)
+
+  document.querySelectorAll('.opsi-status').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!muridAktif) return
+      const status = btn.getAttribute('data-status')
+      const id = muridAktif
+      tutupSheet()
+      const { error } = await supabase
+        .rpc('set_absensi_murid', { p_murid_id: id, p_status: status, p_catatan: null })
+      if (error) {
+        toast('Gagal menyimpan: ' + (error.message || 'coba lagi'), 'error')
+        console.error('set_absensi_murid:', error)
+        return
+      }
+      // Update cache lokal lalu render (hemat 1 round-trip)
+      const m = muridCache.find(x => x.murid_id === id)
+      if (m) m.status = status
+      renderMurid()
+      toast(LABEL[status] + ' tersimpan', 'sukses')
+    })
+  })
+
+  // ── Tutup absensi ──
+  document.getElementById('btn-tutup').addEventListener('click', async () => {
+    const tidakHadir = muridCache.filter(m => m.status && m.status !== 'hadir').length
+    const ok = await konfirmasi({
+      judul: 'Tutup absensi hari ini?',
+      pesan: tidakHadir > 0
+        ? `${tidakHadir} murid ditandai tidak masuk. Sisanya akan tercatat hadir, dan orang tua murid yang tidak masuk akan diberi tahu.`
+        : 'Semua murid akan tercatat hadir hari ini.',
+      labelOk: 'Ya, tutup'
+    })
+    if (!ok) return
+
+    const btn = document.getElementById('btn-tutup')
+    btn.disabled = true; btn.textContent = 'Menutup...'
+    const { error } = await supabase.rpc('tutup_absensi', { p_kelas_id: kelasId })
+    btn.disabled = false; btn.textContent = '✓ Tutup Absensi Hari Ini'
+    if (error) {
+      toast('Gagal menutup: ' + (error.message || 'coba lagi'), 'error')
+      console.error('tutup_absensi:', error)
+      return
+    }
+    toast('Absensi hari ini ditutup', 'sukses')
+    muatAbsen()
+  })
+
+  // ── Buka kembali ──
+  document.getElementById('btn-buka').addEventListener('click', async () => {
+    const ok = await konfirmasi({
+      judul: 'Buka kembali absensi?',
+      pesan: 'Kamu bisa mengubah status murid, lalu tutup lagi.',
+      labelOk: 'Buka'
+    })
+    if (!ok) return
+    const { error } = await supabase.rpc('buka_absensi', { p_kelas_id: kelasId })
+    if (error) {
+      toast('Gagal membuka: ' + (error.message || 'coba lagi'), 'error')
+      return
+    }
+    muatAbsen()
+  })
+
+  // ── Tandai libur ──
+  document.getElementById('btn-libur').addEventListener('click', async () => {
+    const sudahAda = muridCache.some(m => m.status)
+    if (sudahAda) {
+      toast('Sudah ada murid yang ditandai. Ralat dulu sebelum meliburkan.', 'info')
+      return
+    }
+    const ok = await konfirmasi({
+      judul: 'Tandai hari ini libur?',
+      pesan: 'Tidak ada absensi yang dicatat hari ini untuk kelas ini.',
+      labelOk: 'Ya, libur'
+    })
+    if (!ok) return
+    const { error } = await supabase.rpc('set_hari_libur', { p_kelas_id: kelasId, p_libur: true })
+    if (error) {
+      toast('Gagal: ' + (error.message || 'coba lagi'), 'error')
+      return
+    }
+    toast('Hari ini ditandai libur', 'sukses')
+    muatAbsen()
+  })
+
+  // ── Batalkan libur ──
+  document.getElementById('btn-batal-libur').addEventListener('click', async () => {
+    const { error } = await supabase.rpc('set_hari_libur', { p_kelas_id: kelasId, p_libur: false })
+    if (error) { toast('Gagal: ' + (error.message || 'coba lagi'), 'error'); return }
+    muatAbsen()
+  })
+
+  // ── Router halaman ──
+  if (kelasId) {
+    muatAbsen()
+  } else {
+    muatPilihKelas()
+  }
+
+  })()
+</script>
+</body>
+</html>

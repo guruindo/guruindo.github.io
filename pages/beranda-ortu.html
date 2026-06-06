@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1D9E75">
+  <title>GuruIndo — Beranda</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: var(--bg-abu); }
+
+    /* ── Header teal ── */
+    .header {
+      background: var(--teal);
+      padding: 48px max(20px, calc((100% - 480px) / 2)) 20px;
+      padding-top: calc(48px + env(safe-area-inset-top));
+    }
+    .header-baris {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+    }
+    .logo-kecil {
+      width: 30px; height: 30px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+    .sapaan    { color: rgba(255,255,255,0.75); font-size: 13px; }
+    .nama-user {
+      color: white; font-size: 18px; font-weight: 600;
+      margin-top: 3px; max-width: 220px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .btn-avatar {
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0; margin-top: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Konten ── */
+    .konten {
+      padding: 16px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+    }
+    .seksi-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin: 16px 0 10px;
+    }
+    .seksi-judul {
+      font-size: 13px; font-weight: 600;
+      color: var(--teks-muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* ── Kartu anak ── */
+    .kartu-anak {
+      background: white; border-radius: var(--radius-besar);
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease;
+    }
+    .kartu-anak:active { transform: scale(0.98); }
+    .ikon-anak {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--teal-muda);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .info-anak { flex: 1; min-width: 0; }
+    .nama-anak {
+      font-size: 14px; font-weight: 600; color: var(--teks-utama);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .meta-anak {
+      font-size: 12px; color: var(--teks-muted); margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chevron { font-size: 16px; color: var(--teks-muted); flex-shrink: 0; }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+      border-radius: var(--radius-besar);
+      height: 74px; margin-bottom: 10px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* ── Form kode anak ── */
+    .kotak-kode {
+      background: white; border-radius: var(--radius-besar);
+      padding: 20px; margin-top: 4px;
+    }
+    .kotak-kode h2 {
+      font-size: 15px; font-weight: 600; color: var(--teks-utama);
+      margin-bottom: 6px;
+    }
+    .kotak-kode p {
+      font-size: 13px; color: var(--teks-muted);
+      line-height: 1.5; margin-bottom: 14px;
+    }
+    .input-kode {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Nunito', monospace;
+    }
+    .btn-teal {
+      background: var(--teal); color: white;
+      border: none; cursor: pointer;
+    }
+    .btn-teal:hover   { background: #178a65; }
+    .btn-teal:active  { background: #147a59; }
+    .btn-teal:disabled {
+      background: #a0d8c8; cursor: not-allowed;
+    }
+
+    /* ── Tombol tambah anak (setelah ada anak) ── */
+    .btn-tambah-anak {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; width: 100%;
+      padding: 13px 16px;
+      background: white; border: 1.5px dashed var(--garis);
+      border-radius: var(--radius-besar);
+      color: var(--teks-muted); font-size: 14px;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s;
+    }
+    .btn-tambah-anak:active { border-color: var(--teal); color: var(--teal); }
+
+    /* ── Bottom nav (teal accent) ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid var(--garis);
+      display: flex; z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav-inner { display: flex; width: 100%; max-width: 480px; margin: 0 auto; }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 10px 6px;
+      border: none; background: none; cursor: pointer;
+      gap: 3px; opacity: 0.4;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item.aktif { opacity: 1; }
+    .nav-icon  { font-size: 20px; line-height: 1; }
+    .nav-label {
+      font-size: 10px; font-weight: 600;
+      color: var(--teks-muted); font-family: 'Nunito', sans-serif;
+    }
+    .nav-item.aktif .nav-label { color: var(--teal); }
+
+    /* ── Bottom sheet profil ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.38); z-index: 100;
+    }
+    .panel {
+      display: none; position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      z-index: 101;
+    }
+    .handle {
+      width: 36px; height: 4px; background: #E5E7EB;
+      border-radius: 2px; margin: 0 auto 20px;
+    }
+    .profil-box {
+      display: flex; align-items: center; gap: 12px;
+      background: #F0FBF7; border-radius: 12px;
+      padding: 12px; margin-bottom: 12px;
+    }
+    .avatar-besar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; flex-shrink: 0;
+    }
+    .profil-nama  { font-size: 14px; font-weight: 600; color: var(--teks-utama); }
+    .profil-email { font-size: 12px; color: var(--teks-muted); margin-top: 1px; }
+    .profil-peran { font-size: 11px; color: var(--teal); font-weight: 600; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ────────────────────────────────── -->
+<div class="header">
+  <div class="header-baris">
+    <div>
+      <div class="logo-kecil">
+        <svg width="17" height="17" viewBox="0 0 36 36" fill="none">
+          <path d="M9 27L18 11L27 27" stroke="white" stroke-width="2.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 21L23 21" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="sapaan" id="el-sapaan">Memuat...</div>
+      <div class="nama-user" id="el-nama">—</div>
+    </div>
+    <button class="btn-avatar" id="btn-avatar" aria-label="Profil">👤</button>
+  </div>
+</div>
+
+<!-- ── KONTEN ─────────────────────────────────── -->
+<div class="konten">
+
+  <div class="seksi-header">
+    <span class="seksi-judul">Anak Saya</span>
+  </div>
+
+  <!-- Skeleton loading -->
+  <div id="el-loading">
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- Daftar anak (diisi JS) -->
+  <div id="el-daftar" style="display:none"></div>
+
+  <!-- Empty state + form kode -->
+  <div id="el-kosong" style="display:none">
+    <div class="kotak-kode">
+      <h2>👨‍👩‍👧 Hubungkan dengan anak kamu</h2>
+      <p>
+        Masukkan kode yang diberikan oleh wali kelas anakmu. Kode biasanya berbentuk
+        <strong>XXXX-XXXX</strong> dan dikirim via WhatsApp atau pengumuman kelas.
+      </p>
+
+      <input
+        type="text"
+        id="input-kode"
+        class="input input-kode"
+        placeholder="Contoh: ABCD-1234"
+        maxlength="9"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+      >
+
+      <div class="error-kotak" id="el-err-kode"></div>
+
+      <button
+        class="btn btn-teal btn-blok"
+        id="btn-klaim"
+        onclick="klaimAnak()"
+        style="margin-top:12px"
+      >
+        Hubungkan Anak
+      </button>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div id="el-error" class="state-kosong" style="display:none">
+    <div class="state-ikon">😕</div>
+    <div class="state-judul">Koneksi bermasalah</div>
+    <div class="state-teks">Tidak bisa memuat data. Cek koneksi internet kamu.</div>
+    <button class="btn btn-teal" onclick="muatAnak()">Coba Lagi</button>
+  </div>
+
+</div>
+
+<!-- ── BOTTOM NAV ─────────────────────────────── -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+  <button class="nav-item aktif" aria-current="page">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Beranda</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='pengumuman.html'">
+    <span class="nav-icon">📢</span>
+    <span class="nav-label">Pengumuman</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='catatan-list.html'">
+    <span class="nav-icon">💬</span>
+    <span class="nav-label">Catatan</span>
+  </button>
+  <button class="nav-item" id="btn-nav-profil">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Profil</span>
+  </button>
+  </div>
+</nav>
+
+<!-- ── BOTTOM SHEET PROFIL ────────────────────── -->
+<div class="overlay" id="el-overlay"></div>
+<div class="panel" id="el-panel">
+  <div class="handle"></div>
+
+  <div class="profil-box">
+    <div class="avatar-besar">👤</div>
+    <div>
+      <div class="profil-nama"  id="menu-nama">—</div>
+      <div class="profil-email" id="menu-email">—</div>
+      <div class="profil-peran">Orang Tua / Wali Murid</div>
+    </div>
+  </div>
+
+  <button class="btn" style="width:100%;justify-content:center;
+    color:#EF4444;border:1.5px solid #FEE2E2;margin-top:4px"
+    id="btn-keluar">
+    Keluar dari GuruIndo
+  </button>
+</div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js'
+  import { toast, loading } from '../js/ui.js'
+
+  // Semua kode dibungkus fungsi async agar 'return' untuk redirect legal
+  ;(async () => {
+
+  // ── 1. Cek sesi ──────────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    window.location.href = 'masuk.html'
+    return
+  }
+
+  // ── 2. Ambil profil ──────────────────────────────
+  const { data: profil, error: errProfil } = await supabase
+    .from('profil')
+    .select('nama, peran')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!profil) {
+    window.location.href = 'pilih-peran.html'
+    return
+  }
+
+  if (profil.peran === 'guru') {
+    window.location.href = 'beranda-guru.html'
+    return
+  }
+
+  // ── 3. Sapaan & nama ─────────────────────────────
+  const jam    = new Date().getHours()
+  const sapaan = jam < 11 ? 'Selamat pagi ☀️'
+    : jam < 15 ? 'Selamat siang 🌤️'
+    : jam < 18 ? 'Selamat sore 🌅'
+    : 'Selamat malam 🌙'
+
+  document.getElementById('el-sapaan').textContent  = sapaan
+  document.getElementById('el-nama').textContent    = profil.nama
+  document.getElementById('menu-nama').textContent  = profil.nama
+  document.getElementById('menu-email').textContent = user.email
+
+  // ── 4. Muat daftar anak ──────────────────────────
+  async function muatAnak() {
+    document.getElementById('el-loading').style.display = 'block'
+    document.getElementById('el-daftar').style.display  = 'none'
+    document.getElementById('el-kosong').style.display  = 'none'
+    document.getElementById('el-error').style.display   = 'none'
+
+    const { data, error } = await supabase
+      .from('ortu_murid')
+      .select(`
+        murid (
+          id, nama,
+          kelas ( nama_kelas, sekolah ( nama ) )
+        )
+      `)
+      .eq('ortu_id', user.id)
+
+    document.getElementById('el-loading').style.display = 'none'
+
+    if (error) {
+      document.getElementById('el-error').style.display = 'block'
+      return
+    }
+
+    if (!data || data.length === 0) {
+      document.getElementById('el-kosong').style.display = 'block'
+      return
+    }
+
+    const kontainer = document.getElementById('el-daftar')
+    kontainer.innerHTML = ''
+    kontainer.style.display = 'block'
+
+    data.forEach(rel => {
+      const m       = rel.murid
+      const kelas   = m.kelas?.nama_kelas || ''
+      const sekolah = m.kelas?.sekolah?.nama || ''
+
+      const el = document.createElement('div')
+      el.className = 'kartu-anak'
+      el.innerHTML = `
+        <div class="ikon-anak">🧒</div>
+        <div class="info-anak">
+          <div class="nama-anak">${m.nama}</div>
+          <div class="meta-anak">${kelas}${sekolah ? ' · ' + sekolah : ''}</div>
+        </div>
+        <span class="chevron">›</span>
+      `
+      el.addEventListener('click', () => nanti('Detail anak'))
+      kontainer.appendChild(el)
+    })
+
+    // Tombol tambah anak lagi
+    const btnTambah = document.createElement('button')
+    btnTambah.className = 'btn-tambah-anak'
+    btnTambah.innerHTML = '+ Tambah anak lain'
+    btnTambah.style.marginTop = '4px'
+    btnTambah.addEventListener('click', () => tampilFormKode())
+    kontainer.appendChild(btnTambah)
+  }
+
+  // Panggil saat halaman dimuat
+  muatAnak()
+  window.muatAnak = muatAnak
+
+  // ── 5. Form klaim anak ───────────────────────────
+
+  // Format otomatis saat ketik: sisipkan "-" setelah 4 karakter
+  const inputKode = document.getElementById('input-kode')
+  inputKode?.addEventListener('input', (e) => {
+    let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4, 8)
+    e.target.value = val
+    // Reset error saat user mengetik
+    sembunyikanErr()
+  })
+
+  // Aktifkan enter di field kode
+  inputKode?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') klaimAnak()
+  })
+
+  function tampilErr(pesan) {
+    const el = document.getElementById('el-err-kode')
+    el.textContent = pesan
+    el.classList.add('tampil')
+  }
+
+  function sembunyikanErr() {
+    const el = document.getElementById('el-err-kode')
+    el.classList.remove('tampil')
+  }
+
+  function tampilFormKode() {
+    document.getElementById('el-kosong').style.display = 'block'
+    document.getElementById('el-kosong').scrollIntoView({ behavior: 'smooth' })
+    setTimeout(() => inputKode?.focus(), 400)
+  }
+
+  window.klaimAnak = async function() {
+    const kode = (inputKode?.value || '').trim()
+
+    // Validasi sederhana
+    if (kode.length < 9) {
+      tampilErr('Kode belum lengkap. Masukkan 8 karakter ya 😊')
+      return
+    }
+
+    const btn = document.getElementById('btn-klaim')
+    btn.disabled    = true
+    btn.textContent = 'Menghubungkan...'
+    sembunyikanErr()
+
+    // Panggil function klaim_anak di Supabase
+    const { data: hasil, error } = await supabase
+      .rpc('klaim_anak', { p_kode_anak: kode })
+
+    btn.disabled    = false
+    btn.textContent = 'Hubungkan Anak'
+
+    if (error) {
+      // Supabase mengirim pesan error dari RAISE EXCEPTION sebagai teks
+      const pesan = error.message || ''
+
+      if (pesan.includes('tidak ditemukan')) {
+        tampilErr('Kode tidak ditemukan. Coba periksa ulang ya, mungkin ada huruf yang tertukar 🙏')
+      } else if (pesan.includes('sudah terhubung')) {
+        tampilErr('Kamu sudah terhubung dengan anak ini sebelumnya.')
+      } else {
+        tampilErr('Ada masalah saat menghubungkan. Coba lagi ya?')
+        console.error('klaim_anak error:', error)
+      }
+      return
+    }
+
+    // Berhasil!
+    toast(`Berhasil! 🎉 ${hasil.nama_anak} dari ${hasil.kelas} sudah terhubung.`, 'sukses')
+    inputKode.value = ''
+
+    // Muat ulang daftar anak
+    setTimeout(() => muatAnak(), 800)
+  }
+
+  // ── 6. Panel profil & logout ─────────────────────
+  function bukaPanel() {
+    document.getElementById('el-overlay').style.display = 'block'
+    document.getElementById('el-panel').style.display   = 'block'
+  }
+  function tutupPanel() {
+    document.getElementById('el-overlay').style.display = 'none'
+    document.getElementById('el-panel').style.display   = 'none'
+  }
+
+  document.getElementById('btn-avatar').addEventListener('click', bukaPanel)
+  document.getElementById('btn-nav-profil').addEventListener('click', bukaPanel)
+  document.getElementById('el-overlay').addEventListener('click', tutupPanel)
+
+  document.getElementById('btn-keluar').addEventListener('click', async () => {
+    await supabase.auth.signOut()
+    window.location.href = '../index.html'
+  })
+
+  window.nanti = function(nama) {
+    toast(`${nama} akan hadir segera 🌱`, 'info')
+  }
+
+  })()  // <- tutup fungsi async
+</script>
+
+<!-- Banner pasang PWA (muncul otomatis hanya jika browser mendukung & belum terpasang) -->
+<div id="pwa-banner" style="display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:calc(72px + env(safe-area-inset-bottom)); z-index:60; max-width:480px; width:calc(100% - 32px);">
+  <button id="pwa-pasang" style="width:100%; padding:12px; border:none; border-radius:14px; background:#1D9E75; color:white; font-size:14px; font-weight:600; font-family:'Nunito',sans-serif; box-shadow:0 6px 20px rgba(29,158,117,0.35); cursor:pointer; -webkit-tap-highlight-color:transparent;">📲 Pasang GuruIndo</button>
+</div>
+<script>
+  (function(){
+    let deferred = null
+    const banner = document.getElementById('pwa-banner')
+    const tombol = document.getElementById('pwa-pasang')
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); deferred = e; banner.style.display = 'block'
+    })
+    tombol.addEventListener('click', async () => {
+      if (!deferred) return
+      deferred.prompt()
+      await deferred.userChoice
+      deferred = null; banner.style.display = 'none'
+    })
+    window.addEventListener('appinstalled', () => { banner.style.display = 'none' })
+  })()
+</script>
+</body>
+</html>

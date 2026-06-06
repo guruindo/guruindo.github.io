@@ -1,0 +1,25 @@
+{
+  "name": "GuruIndo",
+  "short_name": "GuruIndo",
+  "description": "Sekolah dan rumah, satu hati",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#534AB7",
+  "theme_color": "#534AB7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='48' fill='%23534AB7'/><path d='M48 148 L96 56 L144 148' stroke='white' stroke-width='12' stroke-linecap='round' stroke-linejoin='round' fill='none'/><path d='M72 116 L120 116' stroke='white' stroke-width='12' stroke-linecap='round'/><circle cx='96' cy='164' r='12' fill='%231D9E75'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%23534AB7'/><path d='M128 400 L256 148 L384 400' stroke='white' stroke-width='32' stroke-linecap='round' stroke-linejoin='round' fill='none'/><path d='M192 304 L320 304' stroke='white' stroke-width='32' stroke-linecap='round'/><circle cx='256' cy='432' r='32' fill='%231D9E75'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

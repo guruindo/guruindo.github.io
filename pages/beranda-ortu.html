@@ -216,7 +216,16 @@
       <div class="sapaan" id="el-sapaan">Memuat...</div>
       <div class="nama-user" id="el-nama">—</div>
     </div>
-    <button class="btn-avatar" id="btn-avatar" aria-label="Profil">👤</button>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="btn-avatar" id="btn-lonceng" aria-label="Notifikasi" style="position:relative;">
+        🔔
+        <span id="badge-notif" style="display:none; position:absolute; top:-2px; right:-2px;
+          min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#DC2626;
+          color:white; font-size:11px; font-weight:700; line-height:18px; text-align:center;
+          font-family:'Nunito',sans-serif; border:2px solid var(--teal);"></span>
+      </button>
+      <button class="btn-avatar" id="btn-avatar" aria-label="Profil">👤</button>
+    </div>
   </div>
 </div>
 
@@ -412,7 +421,9 @@
         </div>
         <span class="chevron">›</span>
       `
-      el.addEventListener('click', () => nanti('Detail anak'))
+      el.addEventListener('click', () => {
+        window.location.href = 'absensi-anak.html?murid=' + m.id
+      })
       kontainer.appendChild(el)
     })
 
@@ -529,6 +540,24 @@
   window.nanti = function(nama) {
     toast(`${nama} akan hadir segera 🌱`, 'info')
   }
+
+  // ── 7. Notifikasi: badge jumlah belum dibaca + buka halaman ──
+  async function muatBadge() {
+    const { data, error } = await supabase.rpc('notif_belum_dibaca')
+    if (error) return
+    const badge = document.getElementById('badge-notif')
+    const n = Number(data) || 0
+    if (n > 0) {
+      badge.textContent = n > 99 ? '99+' : String(n)
+      badge.style.display = 'block'
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+  document.getElementById('btn-lonceng').addEventListener('click', () => {
+    window.location.href = 'notifikasi.html'
+  })
+  muatBadge()
 
   })()  // <- tutup fungsi async
 </script>

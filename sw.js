@@ -1,5 +1,5 @@
 // Versi dinaikkan -> memaksa browser mengganti SW lama (mis. sisa dari Netlify)
-const CACHE = 'guruindo-v2'
+const CACHE = 'guruindo-v3'
 
 // Basis scope: otomatis benar di root domain ATAU subfolder GitHub Pages.
 // Contoh: di Netlify -> "https://situs/" ; di GH Pages -> "https://user.github.io/guruindo/"

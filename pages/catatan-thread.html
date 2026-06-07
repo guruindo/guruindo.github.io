@@ -237,13 +237,21 @@
             ${tampilKunci ? '<div class="lencana-kunci">↩️ boleh dibalas</div>' : ''}
           </div>`
         thread.appendChild(baris)
-
-        // Catat pesan guru terbaru yang boleh dibalas (untuk komposer ortu)
-        if (!p.balas_dari_id && p.boleh_balas && p.pengirim_id !== user.id) {
-          pesanBolehBalasId = p.id
-        }
       })
       thread.scrollTop = thread.scrollHeight
+
+      // MODEL A: yang menentukan = catatan DARI GURU yang PALING BARU.
+      // Cari pesan guru terakhir di thread (pesan sudah urut lama->baru).
+      // Kalau pesan guru terbaru itu ON -> kotak balas terbuka (pakai id-nya).
+      // Kalau OFF (atau pesan terakhir guru OFF) -> kotak balas DITUTUP.
+      pesanBolehBalasId = null
+      for (let i = pesan.length - 1; i >= 0; i--) {
+        const p = pesan[i]
+        if (p.pengirim_id !== user.id) {        // pesan dari guru (bukan ortu sendiri)
+          pesanBolehBalasId = p.boleh_balas ? p.id : null
+          break                                  // berhenti di pesan guru pertama dari belakang
+        }
+      }
     }
 
     // Saat dipicu realtime: untuk GURU jangan bangun ulang komposer (jaga
@@ -321,9 +329,17 @@
           btn.disabled = false
           if (error) { toast(error.message || 'Gagal mengirim', 'error'); console.error(error); return }
 
-          // Fungsi mengembalikan berhasil=false saat guru menonaktifkan chat
-          if (data && data.berhasil === false && data.kode === 'GURU_OFF') {
-            toast('Guru sedang menonaktifkan pesan. Balasanmu belum terkirim — coba lagi nanti ya 🙏', 'peringatan')
+          // Balasan ditolak: guru menutup balasan (TUTUP) atau saklar global (GURU_OFF).
+          // Pesan ramah, dan muat ulang supaya kotak balas ikut tertutup bila perlu.
+          if (data && data.berhasil === false) {
+            if (data.kode === 'TUTUP') {
+              toast('Maaf, guru sudah menutup balasan untuk catatan ini. Balasanmu belum terkirim ya 🙏', 'peringatan')
+            } else if (data.kode === 'GURU_OFF') {
+              toast('Guru sedang menonaktifkan pesan. Balasanmu belum terkirim — coba lagi nanti ya 🙏', 'peringatan')
+            } else {
+              toast('Balasanmu belum terkirim. Coba lagi nanti ya 🙏', 'peringatan')
+            }
+            muat()   // segarkan: kalau memang sudah ditutup, kotak balas akan hilang
             return
           }
           inIsi.value = ''; inIsi.style.height = 'auto'

@@ -312,8 +312,18 @@
     .eq('id', user.id)
     .maybeSingle()
 
+  if (errProfil) {
+    // Gagal jaringan (offline / server) — JANGAN redirect. Tampilkan
+    // error-state supaya user bisa coba lagi tanpa terlempar keliru.
+    document.getElementById('el-loading').style.display = 'none'
+    const el = document.getElementById('el-error')
+    el.querySelector('button').setAttribute('onclick', 'location.reload()')
+    el.style.display = 'block'
+    return
+  }
+
   if (!profil) {
-    // Profil belum dibuat (misalnya gagal di tengah alur)
+    // Profil benar-benar belum dibuat (bukan error jaringan)
     window.location.href = 'pilih-peran.html'
     return
   }

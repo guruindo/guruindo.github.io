@@ -43,7 +43,7 @@
       max-width: 78%;
       padding: 10px 13px; border-radius: 16px;
       font-size: 14px; line-height: 1.5; word-break: break-word;
-      white-space: pre-wrap;
+      white-space: pre-line;
       height: auto; align-self: flex-start;
     }
     .bubble.kiri  { background: white; color: var(--teks-utama); border-bottom-left-radius: 5px; }
@@ -308,7 +308,7 @@
         }
         baris.innerHTML = `
           <div class="bubble ${sayaPengirim ? 'kanan' : 'kiri'}">
-            <div>${aman(p.isi)}</div>
+            <div>${aman((p.isi || '').trim())}</div>
             <div class="bubble-meta">${waktuRamah(p.dibuat_pada)}</div>
             ${tampilKunci ? '<div class="lencana-kunci">↩️ boleh dibalas</div>' : ''}
             ${statusHtml}

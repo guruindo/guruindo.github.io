@@ -192,8 +192,15 @@
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) { window.location.href = 'masuk.html'; return }
 
-  const { data: profil } = await supabase
+  const { data: profil, error: errProfil } = await supabase
     .from('profil').select('nama, peran').eq('id', user.id).maybeSingle()
+  if (errProfil) {
+    document.getElementById('header-sub').textContent = 'Gagal memuat'
+    document.getElementById('el-loading').style.display = 'none'
+    document.getElementById('btn-retry').setAttribute('onclick', 'location.reload()')
+    document.getElementById('el-error').style.display = 'flex'
+    return
+  }
   if (!profil) { window.location.href = 'pilih-peran.html'; return }
 
   const peran = profil.peran

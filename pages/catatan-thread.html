@@ -140,9 +140,9 @@
 
 <!-- Error state (gantikan thread) -->
 <div class="state-tengah" id="el-error" style="display:none">
-  <div class="state-ikon">😕</div>
-  <div class="state-judul">Tidak bisa memuat</div>
-  <div class="state-teks">Cek koneksi, lalu coba lagi.</div>
+  <div class="state-kosong-ikon">😕</div>
+  <div class="state-kosong-judul">Tidak bisa memuat</div>
+  <div class="state-kosong-teks">Cek koneksi, lalu coba lagi.</div>
   <button class="btn btn-utama" id="btn-retry">Coba Lagi</button>
 </div>
 
@@ -291,9 +291,9 @@
     if (!adaPesan) {
       thread.innerHTML = `
         <div class="state-tengah">
-          <div class="state-ikon">💬</div>
-          <div class="state-judul">Belum ada catatan</div>
-          <div class="state-teks">${peran === 'guru'
+          <div class="state-kosong-ikon">💬</div>
+          <div class="state-kosong-judul">Belum ada catatan</div>
+          <div class="state-kosong-teks">${peran === 'guru'
             ? 'Tulis catatan pertama tentang ' + aman(murid.nama) + ' di bawah.'
             : 'Belum ada catatan dari guru.'}</div>
         </div>`

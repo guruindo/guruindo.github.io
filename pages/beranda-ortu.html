@@ -559,6 +559,27 @@
   })
   muatBadge()
 
+  // ── Realtime: badge update sendiri saat ada notif baru/berubah ──
+  // Lapisan tambahan di atas muatBadge() awal (yang tetap jadi fallback).
+  // Tiap event di tabel notifikasi milik user ini -> hitung ulang badge.
+  let chNotif = null
+  try {
+    chNotif = supabase
+      .channel('rt-notif-' + user.id)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'notifikasi', filter: 'ortu_id=eq.' + user.id },
+        () => muatBadge()
+      )
+      .subscribe()
+  } catch (_) { /* realtime gagal != app rusak; badge tetap akurat saat load */ }
+
+  // Lepas koneksi saat keluar halaman (hemat kuota koneksi realtime)
+  function lepasRealtime() {
+    if (chNotif) { supabase.removeChannel(chNotif); chNotif = null }
+  }
+  window.addEventListener('pagehide', lepasRealtime)
+  window.addEventListener('beforeunload', lepasRealtime)
+
   })()  // <- tutup fungsi async
 </script>
 

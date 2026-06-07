@@ -182,9 +182,7 @@
   let adaPesan = false
 
   // ── Status baca ✓✓ ──
-  // Pengamat (IntersectionObserver) yang memantau bubble TERAKHIR. Saat bubble
-  // itu terlihat -> kita anggap thread sudah dibaca -> panggil RPC sekali.
-  let pengamatBaca = null
+  // "Dibaca" dipicu saat user sampai di DASAR thread (lihat pasangPengamatBaca).
   let sudahTandaiSesiIni = false   // cegah RPC berulang dalam satu kali muat
 
   async function tandaiSudahDibaca() {
@@ -194,32 +192,39 @@
       await supabase.rpc('tandai_thread_dibaca', { p_murid_id: muridId })
     } catch (_) {
       // Offline / gagal != thread rusak. Reset flag supaya bisa dicoba lagi
-      // saat pesan terakhir terlihat lagi (mis. setelah koneksi balik).
+      // saat user scroll ke dasar lagi (mis. setelah koneksi balik).
       sudahTandaiSesiIni = false
     }
   }
 
   function lepasPengamatBaca() {
-    if (pengamatBaca) { pengamatBaca.disconnect(); pengamatBaca = null }
+    thread.removeEventListener('scroll', cekDasarSaatScroll)
   }
 
-  // Pasang pengamat ke bubble paling bawah di dalam #thread.
+  // "Dibaca" = user sudah sampai di DASAR thread (pesan terakhir tuntas
+  // dilihat). Pendekatan lama (amati 60% bubble terakhir) GAGAL untuk pesan
+  // yang LEBIH TINGGI dari layar: auto-scroll ke bawah cuma menampilkan
+  // ujung bawah bubble, < 60%, jadi observer tak pernah memicu. Sekarang kita
+  // ukur posisi scroll langsung: kalau jarak ke dasar <= ambang -> dibaca.
+  const AMBANG_DASAR = 40   // px toleransi dari dasar
+  function diDasarThread() {
+    return thread.scrollHeight - thread.scrollTop - thread.clientHeight <= AMBANG_DASAR
+  }
+  function cekDasarSaatScroll() {
+    if (diDasarThread()) tandaiSudahDibaca()
+  }
+
+  // Dipanggil setelah render + auto-scroll ke bawah.
   function pasangPengamatBaca() {
     lepasPengamatBaca()
     const baris = thread.querySelectorAll('.bubble-baris')
     if (!baris.length) return
-    const terakhir = baris[baris.length - 1]
-    if (!('IntersectionObserver' in window)) {
-      // Browser sangat lawas: fallback -> langsung tandai (thread sudah
-      // di-scroll ke bawah di atas, jadi pesan terakhir praktis terlihat).
-      tandaiSudahDibaca(); return
-    }
-    pengamatBaca = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) { tandaiSudahDibaca(); break }
-      }
-    }, { root: thread, threshold: 0.6 })
-    pengamatBaca.observe(terakhir)
+    // 1) Sudah di dasar saat muat (kasus umum: auto-scroll ke bawah, pesan
+    //    pendek/sedang, atau thread tak bisa di-scroll) -> langsung dibaca.
+    if (diDasarThread()) { tandaiSudahDibaca(); return }
+    // 2) Thread bisa di-scroll & belum di dasar (mis. pesan SANGAT panjang
+    //    sehingga ujung bawah belum tampak): tandai saat user scroll ke dasar.
+    thread.addEventListener('scroll', cekDasarSaatScroll, { passive: true })
   }
 
   // ── Muat thread ──
@@ -309,13 +314,13 @@
           </div>`
         thread.appendChild(baris)
       })
+      // Auto-scroll ke pesan terbaru. Tunda cek "dibaca" ke frame berikutnya
+      // supaya layout (terutama di HP) sudah final sebelum posisi scroll dibaca.
       thread.scrollTop = thread.scrollHeight
-
-      // ── Tandai "dibaca" saat pesan TERAKHIR benar-benar terlihat di layar ──
-      // "Dibaca" = user scroll sampai bubble paling bawah masuk viewport
-      // (atau memang sudah di bawah saat thread dibuka). Bukan sekadar buka.
-      // root = #thread (container yang men-scroll). Tandai cukup sekali per muat.
-      pasangPengamatBaca()
+      requestAnimationFrame(() => {
+        thread.scrollTop = thread.scrollHeight
+        pasangPengamatBaca()
+      })
 
       // MODEL A: yang menentukan = catatan DARI GURU yang PALING BARU.
       // Cari pesan guru terakhir di thread (pesan sudah urut lama->baru).

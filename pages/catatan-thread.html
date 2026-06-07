@@ -175,7 +175,10 @@
   let adaPesan = false
 
   // ── Muat thread ──
-  async function muat() {
+  // dariRealtime=true -> dipicu event realtime; JANGAN bangun ulang komposer
+  // bila sudah ada (supaya posisi toggle & teks yang sedang diketik tak hilang).
+  let komposerSiap = false
+  async function muat(dariRealtime = false) {
     elError.style.display = 'none'
     thread.style.display = 'block'
 
@@ -243,7 +246,15 @@
       thread.scrollTop = thread.scrollHeight
     }
 
-    bangunKomposer(murid.nama)
+    // Saat dipicu realtime: untuk GURU jangan bangun ulang komposer (jaga
+    // posisi toggle & teks yang sedang diketik). Untuk ORTU tetap dibangun
+    // ulang supaya kotak balasan muncul begitu guru membuka 'boleh dibalas'.
+    // Pengecualian guru hanya berlaku bila komposer sudah pernah dibangun.
+    const lewatiKomposer = dariRealtime && komposerSiap && peran === 'guru'
+    if (!lewatiKomposer) {
+      bangunKomposer(murid.nama)
+      komposerSiap = true
+    }
   }
 
   // ── Komposer sesuai peran ──
@@ -347,7 +358,7 @@
       .channel('rt-pesan-' + muridId)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'pesan', filter: 'murid_id=eq.' + muridId },
-        () => muat()
+        () => muat(true)
       )
       .subscribe()
   } catch (_) { /* realtime gagal != chat rusak; tetap jalan saat muat/kirim */ }

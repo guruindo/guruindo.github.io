@@ -131,8 +131,16 @@
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) { window.location.href = 'masuk.html'; return }
 
-  const { data: profil } = await supabase
+  const { data: profil, error: errProfil } = await supabase
     .from('profil').select('peran').eq('id', user.id).maybeSingle()
+  if (errProfil) {
+    document.getElementById('el-loading').innerHTML =
+      '<div class="state-kosong"><div class="state-kosong-ikon">😕</div>' +
+      '<div class="state-kosong-judul">Koneksi bermasalah</div>' +
+      '<div class="state-kosong-teks">Tidak bisa memuat. Cek koneksi internetmu, lalu coba lagi.</div>' +
+      '<button class="btn btn-utama" onclick="location.reload()" style="margin-top:4px">Coba Lagi</button></div>'
+    return
+  }
   if (!profil)               { window.location.href = 'pilih-peran.html'; return }
   if (profil.peran !== 'guru') { window.location.href = 'beranda-ortu.html'; return }
 

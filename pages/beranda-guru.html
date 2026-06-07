@@ -260,7 +260,7 @@
     <span class="nav-label">Absensi</span>
   </button>
   <button class="nav-item" onclick="window.location.href='catatan-list.html'">
-    <span class="nav-icon">💬</span>
+    <span class="nav-icon" style="position:relative">💬<span id="badge-catatan" style="display:none;position:absolute;top:-6px;right:-10px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:700;line-height:16px;text-align:center;font-family:'Nunito',sans-serif">0</span></span>
     <span class="nav-label">Catatan</span>
   </button>
   <button class="nav-item" id="btn-nav-profil">
@@ -429,6 +429,21 @@
     else { badge.style.display = 'none' }
   }
   muatBadgePengajuan()
+
+  // Badge catatan baru (di ikon Catatan). Hitung thread dgn pesan dari
+  // LAWAN yang lebih baru dari waktu-bacaku. Non-realtime: cukup saat
+  // beranda dibuka. RPC gagal/offline -> badge sembunyi (tak ganggu).
+  async function muatBadgeCatatan() {
+    try {
+      const { data, error } = await supabase.rpc('catatan_belum_dibaca')
+      if (error) return
+      const n = Number(data) || 0
+      const badge = document.getElementById('badge-catatan')
+      if (n > 0) { badge.textContent = n > 9 ? '9+' : String(n); badge.style.display = 'block' }
+      else { badge.style.display = 'none' }
+    } catch (_) { /* offline -> biarkan badge tersembunyi */ }
+  }
+  muatBadgeCatatan()
 
   // ── Realtime: badge pengajuan update sendiri saat ortu kirim/ubah ──
   // Subscribe seluruh tabel pengajuan_izin; angka final tetap dihitung

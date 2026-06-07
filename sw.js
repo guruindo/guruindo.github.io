@@ -13,7 +13,7 @@
 //   * HANYA method GET yang ditangani (POST dll dibiarkan apa adanya).
 // ================================================================
 
-const CACHE = 'guruindo-v4'
+const CACHE = 'guruindo-v5'
 
 // Basis scope: otomatis benar di root domain ATAU subfolder GitHub Pages.
 const BASE = self.registration.scope
@@ -23,6 +23,7 @@ const SHELL = [
   '',
   'index.html',
   'manifest.json',
+  'favicon.svg',
   'css/main.css',
   'css/components.css',
   'offline.html'

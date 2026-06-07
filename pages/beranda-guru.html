@@ -188,9 +188,9 @@
     <div>
       <div class="logo-kecil">
         <svg width="17" height="17" viewBox="0 0 36 36" fill="none">
-          <path d="M9 27L18 11L27 27" stroke="white" stroke-width="2.8"
-            stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M13 21L23 21" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M23.2 13.22 C21.94 11.81 20.11 10.97 18 10.97 C14.06 10.97 10.97 14.13 10.97 18 C10.97 21.87 14.06 25.03 18 25.03 C21.09 25.03 23.77 22.99 24.68 20.11 H18.42"
+            stroke="white" stroke-width="3.23"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
       <div class="sapaan" id="el-sapaan">Memuat...</div>
@@ -224,9 +224,9 @@
 
   <!-- Empty state: belum ada kelas -->
   <div id="el-kosong" class="state-kosong" style="display:none">
-    <div class="state-ikon">🏫</div>
-    <div class="state-judul">Belum ada kelas</div>
-    <div class="state-teks">
+    <div class="state-kosong-ikon">🏫</div>
+    <div class="state-kosong-judul">Belum ada kelas</div>
+    <div class="state-kosong-teks">
       Daftarkan sekolah dan kelas pertamamu. Setelah itu, bagikan kode ke muridmu agar orang tua bisa terhubung.
     </div>
     <button class="btn btn-utama" onclick="window.location.href='daftar-kelas.html'">
@@ -236,9 +236,9 @@
 
   <!-- Error state -->
   <div id="el-error" class="state-kosong" style="display:none">
-    <div class="state-ikon">😕</div>
-    <div class="state-judul">Koneksi bermasalah</div>
-    <div class="state-teks">Tidak bisa memuat daftar kelas. Cek koneksi internet kamu, lalu coba lagi.</div>
+    <div class="state-kosong-ikon">😕</div>
+    <div class="state-kosong-judul">Koneksi bermasalah</div>
+    <div class="state-kosong-teks">Tidak bisa memuat daftar kelas. Cek koneksi internet kamu, lalu coba lagi.</div>
     <button class="btn btn-utama" onclick="muatKelas()">Coba Lagi</button>
   </div>
 

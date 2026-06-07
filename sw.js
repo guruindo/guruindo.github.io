@@ -1,5 +1,5 @@
 // ================================================================
-// GuruIndo — Service Worker v4
+// GuruIndo — Service Worker v5
 // ================================================================
 // Strategi:
 //   * Dokumen HTML (navigasi)  -> NETWORK-FIRST + timeout.

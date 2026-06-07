@@ -40,8 +40,30 @@
   <div class="konten">
     <div class="ikon">🌐</div>
     <h1>Koneksi terputus</h1>
-    <p>Sepertinya internet kamu sedang tidak aktif. Sambungkan dulu ya, lalu coba lagi.</p>
-    <button onclick="location.reload()">Coba lagi</button>
+    <p>Sepertinya internet anda sedang tidak aktif. Sambungkan dulu ya — halaman akan otomatis terbuka begitu koneksi kembali.</p>
+    <button id="btn-coba">Coba lagi</button>
+    <p id="status-offline" style="margin-top:14px;margin-bottom:0;font-size:13px;color:var(--teks-ringan);min-height:18px"></p>
   </div>
+  <script>
+    var btn = document.getElementById('btn-coba')
+    var stat = document.getElementById('status-offline')
+
+    function cobaLagi() {
+      if (navigator.onLine === false) {
+        stat.textContent = 'Masih offline — menunggu koneksi kembali...'
+        return
+      }
+      stat.textContent = 'Menyambungkan...'
+      location.reload()
+    }
+
+    btn.addEventListener('click', cobaLagi)
+
+    // Auto-pulih: begitu browser mendeteksi online lagi, muat ulang sendiri.
+    window.addEventListener('online', function () {
+      stat.textContent = 'Koneksi kembali — memuat ulang...'
+      location.reload()
+    })
+  </script>
 </body>
 </html>

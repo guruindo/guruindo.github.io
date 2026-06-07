@@ -338,7 +338,28 @@
   muat()
   document.getElementById('btn-retry').addEventListener('click', muat)
 
+  // ── Realtime: pesan baru muncul sendiri tanpa refresh ──
+  // Subscribe perubahan tabel `pesan` untuk murid ini; tiap event -> muat().
+  // Lapisan tambahan; muat() awal + muat() sesudah kirim tetap fallback.
+  let chPesan = null
+  try {
+    chPesan = supabase
+      .channel('rt-pesan-' + muridId)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'pesan', filter: 'murid_id=eq.' + muridId },
+        () => muat()
+      )
+      .subscribe()
+  } catch (_) { /* realtime gagal != chat rusak; tetap jalan saat muat/kirim */ }
+
+  function lepasRealtime() {
+    if (chPesan) { supabase.removeChannel(chPesan); chPesan = null }
+  }
+  window.addEventListener('pagehide', lepasRealtime)
+  window.addEventListener('beforeunload', lepasRealtime)
+
   document.getElementById('btn-kembali').addEventListener('click', () => {
+    lepasRealtime()
     window.location.href = 'catatan-list.html'
   })
 

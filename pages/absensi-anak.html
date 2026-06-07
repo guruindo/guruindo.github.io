@@ -105,6 +105,36 @@
     }
     .pilih-jenis.aktif { border-color: var(--teal); background: var(--teal-muda); color: var(--teal-gelap); }
 
+    /* ── Blok upload foto surat dokter (muncul saat 'sakit') ── */
+    .foto-grup { display: none; margin-top: 14px; }
+    .foto-grup.tampil { display: block; }
+    .foto-drop {
+      border: 1.5px dashed var(--garis); border-radius: var(--radius-sedang);
+      padding: 18px; text-align: center; cursor: pointer; background: #FAFAFA;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .foto-drop:active { background: #F1F1F1; }
+    .foto-drop-ikon { font-size: 26px; }
+    .foto-drop-teks { font-size: 13px; color: var(--teks-muted); margin-top: 4px; }
+    .foto-hint { font-size: 11px; color: var(--teks-muted); margin-top: 6px; }
+    .foto-preview-wrap { position: relative; margin-top: 10px; display: none; }
+    .foto-preview-wrap.tampil { display: block; }
+    .foto-preview {
+      width: 100%; max-height: 220px; object-fit: contain;
+      border-radius: var(--radius-sedang); border: 1px solid var(--garis); background: #fff;
+    }
+    .foto-ganti {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,.6); color: #fff; border: none;
+      border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+    }
+
+    /* ── Penanda foto pada kartu riwayat ── */
+    .pj-foto { font-size: 12px; margin-top: 6px; }
+    .pj-foto a { color: var(--teal-gelap); font-weight: 700; text-decoration: none; }
+    .pj-foto-belum { font-size: 12px; margin-top: 6px; color: #DC2626; font-weight: 600; }
+
     /* ── Kartu riwayat pengajuan ── */
     .kartu-pengajuan {
       background: white; border-radius: var(--radius-besar);
@@ -215,6 +245,22 @@
     <textarea class="input-field" id="aj-alasan" rows="3"
       placeholder="Contoh: demam, kontrol ke dokter, acara keluarga..."
       style="resize:none;font-family:'Nunito',sans-serif"></textarea>
+  </div>
+
+  <!-- ── Foto surat dokter: hanya muncul & wajib saat jenis = sakit ── -->
+  <div class="foto-grup" id="aj-foto-grup">
+    <label class="input-label">Foto surat dokter <span style="color:#DC2626">*</span></label>
+    <div class="foto-drop" id="aj-foto-drop">
+      <div class="foto-drop-ikon">📷</div>
+      <div class="foto-drop-teks">Ketuk untuk ambil / pilih foto</div>
+    </div>
+    <div class="foto-hint">Wajib untuk pengajuan sakit. Foto akan dikecilkan otomatis.</div>
+    <div class="foto-preview-wrap" id="aj-foto-preview-wrap">
+      <img class="foto-preview" id="aj-foto-preview" alt="Pratinjau surat dokter">
+      <button type="button" class="foto-ganti" id="aj-foto-ganti">Ganti</button>
+    </div>
+    <!-- input file disembunyikan; dipicu dari .foto-drop -->
+    <input type="file" id="aj-foto-input" accept="image/*" capture="environment" style="display:none">
   </div>
 
   <div class="error-kotak" id="aj-err" style="margin-top:10px"></div>
@@ -367,7 +413,24 @@
         </div>
         <div class="pj-alasan">${p.alasan}</div>
         ${p.catatan_guru ? `<div class="pj-catatan">Catatan guru: ${p.catatan_guru}</div>` : ''}
+        ${p.jenis_izin === 'sakit'
+          ? (p.foto_path
+              ? `<div class="pj-foto"><a href="#" data-foto="${p.foto_path}">📎 Lihat surat dokter</a></div>`
+              : `<div class="pj-foto-belum">⚠️ Foto surat dokter belum terkirim</div>`)
+          : ''}
       `
+      // Link "Lihat surat dokter" -> buat signed URL saat diklik (bucket private)
+      const linkFoto = el.querySelector('[data-foto]')
+      if (linkFoto) {
+        linkFoto.addEventListener('click', async (e) => {
+          e.preventDefault()
+          const path = linkFoto.getAttribute('data-foto')
+          const { data, error } = await supabase
+            .storage.from('surat-dokter').createSignedUrl(path, 300)
+          if (error || !data?.signedUrl) { toast('Gagal membuka foto. Coba lagi ya.', 'error'); return }
+          window.open(data.signedUrl, '_blank')
+        })
+      }
       wrap.appendChild(el)
     })
   }
@@ -376,6 +439,72 @@
   const ovAjukan    = document.getElementById('ov-ajukan')
   const sheetAjukan = document.getElementById('sheet-ajukan')
   let jenisDipilih  = 'izin'
+  let fotoBlob      = null   // hasil kompres siap-upload (null = belum ada foto)
+
+  const fotoGrup    = document.getElementById('aj-foto-grup')
+  const fotoInput   = document.getElementById('aj-foto-input')
+  const fotoDrop    = document.getElementById('aj-foto-drop')
+  const fotoPrevWr  = document.getElementById('aj-foto-preview-wrap')
+  const fotoPrevImg = document.getElementById('aj-foto-preview')
+
+  // Tampil/sembunyi blok foto sesuai jenis (wajib hanya untuk 'sakit')
+  function perbaruiTampilFoto() {
+    fotoGrup.classList.toggle('tampil', jenisDipilih === 'sakit')
+  }
+
+  // Reset pilihan foto
+  function resetFoto() {
+    fotoBlob = null
+    fotoInput.value = ''
+    fotoPrevImg.removeAttribute('src')
+    fotoPrevWr.classList.remove('tampil')
+    fotoDrop.style.display = ''
+  }
+
+  // Kompres foto pakai canvas: maks sisi 1280px, JPEG ~0.7. Tanpa library.
+  function kompresFoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const maks = 1280
+        let { width, height } = img
+        if (width > maks || height > maks) {
+          if (width >= height) { height = Math.round(height * maks / width); width = maks }
+          else { width = Math.round(width * maks / height); height = maks }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error('gagal kompres')),
+          'image/jpeg', 0.7
+        )
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('gagal baca gambar')) }
+      img.src = url
+    })
+  }
+
+  // Pilih file -> kompres -> preview
+  fotoDrop.addEventListener('click', () => fotoInput.click())
+  document.getElementById('aj-foto-ganti').addEventListener('click', () => fotoInput.click())
+  fotoInput.addEventListener('change', async () => {
+    const file = fotoInput.files && fotoInput.files[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { ajErr('File harus berupa foto ya, Pak/Bu.'); fotoInput.value=''; return }
+    try {
+      fotoBlob = await kompresFoto(file)
+      fotoPrevImg.src = URL.createObjectURL(fotoBlob)
+      fotoPrevWr.classList.add('tampil')
+      fotoDrop.style.display = 'none'
+      document.getElementById('aj-err').classList.remove('tampil')
+    } catch (_) {
+      fotoBlob = null
+      ajErr('Foto gagal diproses. Coba foto lain ya.')
+    }
+  })
 
   function hariIniISO() {
     const d = new Date()
@@ -395,6 +524,8 @@
     jenisDipilih = 'izin'
     document.querySelectorAll('.pilih-jenis').forEach(b =>
       b.classList.toggle('aktif', b.getAttribute('data-jenis') === 'izin'))
+    resetFoto()
+    perbaruiTampilFoto()
     ovAjukan.style.display = 'block'
     sheetAjukan.style.display = 'block'
   }
@@ -412,6 +543,7 @@
       jenisDipilih = btn.getAttribute('data-jenis')
       document.querySelectorAll('.pilih-jenis').forEach(b =>
         b.classList.toggle('aktif', b === btn))
+      perbaruiTampilFoto()
     })
   })
 
@@ -437,21 +569,60 @@
     if (!dari || !sampai) return ajErr('Tanggalnya belum lengkap, Pak/Bu.')
     if (sampai < dari)    return ajErr('Tanggal selesai jangan sebelum tanggal mulai.')
     if (!alasan)          return ajErr('Mohon isi alasannya dulu ya.')
+    // Foto WAJIB untuk sakit (dipaksa di UX; server tetap izinkan tanpa foto - Q1=A)
+    if (jenisDipilih === 'sakit' && !fotoBlob)
+      return ajErr('Untuk sakit, mohon lampirkan foto surat dokter dulu ya.')
 
     const btn = document.getElementById('btn-kirim-ajukan')
     btn.disabled = true; btn.textContent = 'Mengirim...'
-    const { error } = await supabase.rpc('ajukan_izin', {
+
+    // 1) Buat pengajuannya dulu -> dapat pengajuan_id
+    const { data, error } = await supabase.rpc('ajukan_izin', {
       p_murid_id: muridId, p_jenis: jenisDipilih,
       p_tgl_dari: dari, p_tgl_sampai: sampai, p_alasan: alasan
     })
-    btn.disabled = false; btn.textContent = 'Kirim pengajuan'
 
     if (error) {
+      btn.disabled = false; btn.textContent = 'Kirim pengajuan'
       const m = error.message || ''
       if (m.includes('beririsan')) return ajErr('Sudah ada pengajuan menunggu untuk tanggal itu.')
       if (m.includes('sudah lewat')) return ajErr('Tidak bisa untuk tanggal yang sudah lewat.')
       return ajErr('Gagal mengirim. Coba lagi ya?')
     }
+
+    const pengajuanId = data && data.pengajuan_id
+
+    // 2) Kalau sakit + ada foto: upload ke Storage lalu catat path-nya.
+    //    Kalau upload/ catat GAGAL: pengajuan TETAP ada (Q1=A), beri tahu ortu
+    //    fotonya belum terkirim & bisa diunggah ulang nanti dari riwayat.
+    if (jenisDipilih === 'sakit' && fotoBlob && pengajuanId) {
+      btn.textContent = 'Mengunggah foto...'
+      const path = `${muridId}/${pengajuanId}.jpg`
+      let fotoOk = false
+      try {
+        const up = await supabase.storage.from('surat-dokter')
+          .upload(path, fotoBlob, { contentType: 'image/jpeg', upsert: true })
+        if (!up.error) {
+          const setRes = await supabase.rpc('set_foto_pengajuan', {
+            p_pengajuan_id: pengajuanId, p_path: path
+          })
+          fotoOk = !setRes.error
+        }
+      } catch (_) { fotoOk = false }
+
+      btn.disabled = false; btn.textContent = 'Kirim pengajuan'
+      tutupAjukan()
+      if (fotoOk) {
+        toast('Pengajuan + foto terkirim, menunggu guru 🙏', 'sukses')
+      } else {
+        toast('Pengajuan terkirim, tapi foto gagal diunggah. Unggah ulang dari riwayat ya.', 'error')
+      }
+      muatPengajuan()
+      return
+    }
+
+    // 3) Izin (tanpa foto), atau sakit tanpa foto (jalur fallback)
+    btn.disabled = false; btn.textContent = 'Kirim pengajuan'
     tutupAjukan()
     toast('Pengajuan terkirim, menunggu guru 🙏', 'sukses')
     muatPengajuan()

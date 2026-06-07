@@ -353,6 +353,15 @@
     .eq('id', user.id)
     .maybeSingle()
 
+  if (errProfil) {
+    // Gagal jaringan — JANGAN redirect, tampilkan error-state.
+    document.getElementById('el-loading').style.display = 'none'
+    const el = document.getElementById('el-error')
+    el.querySelector('button').setAttribute('onclick', 'location.reload()')
+    el.style.display = 'block'
+    return
+  }
+
   if (!profil) {
     window.location.href = 'pilih-peran.html'
     return

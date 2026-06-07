@@ -418,14 +418,36 @@
   document.getElementById('el-overlay').addEventListener('click', tutupPanel)
 
   // Badge pengajuan izin/sakit yang menunggu (di ikon Absensi)
-  ;(async () => {
+  async function muatBadgePengajuan() {
     const { data, error } = await supabase.rpc('pengajuan_menunggu_guru')
     if (error) return
     const n = Number(data) || 0
     const badge = document.getElementById('badge-pengajuan')
     if (n > 0) { badge.textContent = n > 9 ? '9+' : String(n); badge.style.display = 'block' }
     else { badge.style.display = 'none' }
-  })()
+  }
+  muatBadgePengajuan()
+
+  // ── Realtime: badge pengajuan update sendiri saat ortu kirim/ubah ──
+  // Subscribe seluruh tabel pengajuan_izin; angka final tetap dihitung
+  // RPC pengajuan_menunggu_guru (sudah RLS-aware, hanya kelas guru ini).
+  // Lapisan tambahan; muatBadgePengajuan() awal tetap fallback (no regresi).
+  let chPengajuan = null
+  try {
+    chPengajuan = supabase
+      .channel('rt-pengajuan-' + user.id)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'pengajuan_izin' },
+        () => muatBadgePengajuan()
+      )
+      .subscribe()
+  } catch (_) { /* realtime gagal != app rusak */ }
+
+  function lepasRealtime() {
+    if (chPengajuan) { supabase.removeChannel(chPengajuan); chPengajuan = null }
+  }
+  window.addEventListener('pagehide', lepasRealtime)
+  window.addEventListener('beforeunload', lepasRealtime)
 
   // Keluar
   document.getElementById('btn-keluar').addEventListener('click', async () => {

@@ -539,10 +539,6 @@
     window.location.href = '../index.html'
   })
 
-  window.nanti = function(nama) {
-    toast(`${nama} akan hadir segera 🌱`, 'info')
-  }
-
   // ── 7. Notifikasi: badge jumlah belum dibaca + buka halaman ──
   async function muatBadge() {
     const { data, error } = await supabase.rpc('notif_belum_dibaca')

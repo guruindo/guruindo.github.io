@@ -50,6 +50,11 @@
     .bubble-meta { font-size: 10px; margin-top: 5px; opacity: 0.7; }
     .bubble.kanan .bubble-meta { color: rgba(255,255,255,0.85); }
     .bubble.kiri  .bubble-meta { color: var(--teks-ringan); }
+    /* Status baca (hanya di bubble milik sendiri = kanan) */
+    .bubble-status { font-size: 10px; margin-top: 3px; font-weight: 600; }
+    .bubble.kanan .bubble-status { color: rgba(255,255,255,0.9); }
+    .bubble-status.dibaca { color: #1D9E75; }
+    .bubble.kanan .bubble-status.dibaca { color: #BFEFD9; }
     .lencana-kunci {
       font-size: 10px; margin-top: 4px; color: var(--teks-ringan);
       display: flex; align-items: center; gap: 3px;
@@ -176,6 +181,47 @@
   let pesanBolehBalasId = null
   let adaPesan = false
 
+  // ── Status baca ✓✓ ──
+  // Pengamat (IntersectionObserver) yang memantau bubble TERAKHIR. Saat bubble
+  // itu terlihat -> kita anggap thread sudah dibaca -> panggil RPC sekali.
+  let pengamatBaca = null
+  let sudahTandaiSesiIni = false   // cegah RPC berulang dalam satu kali muat
+
+  async function tandaiSudahDibaca() {
+    if (sudahTandaiSesiIni) return
+    sudahTandaiSesiIni = true
+    try {
+      await supabase.rpc('tandai_thread_dibaca', { p_murid_id: muridId })
+    } catch (_) {
+      // Offline / gagal != thread rusak. Reset flag supaya bisa dicoba lagi
+      // saat pesan terakhir terlihat lagi (mis. setelah koneksi balik).
+      sudahTandaiSesiIni = false
+    }
+  }
+
+  function lepasPengamatBaca() {
+    if (pengamatBaca) { pengamatBaca.disconnect(); pengamatBaca = null }
+  }
+
+  // Pasang pengamat ke bubble paling bawah di dalam #thread.
+  function pasangPengamatBaca() {
+    lepasPengamatBaca()
+    const baris = thread.querySelectorAll('.bubble-baris')
+    if (!baris.length) return
+    const terakhir = baris[baris.length - 1]
+    if (!('IntersectionObserver' in window)) {
+      // Browser sangat lawas: fallback -> langsung tandai (thread sudah
+      // di-scroll ke bawah di atas, jadi pesan terakhir praktis terlihat).
+      tandaiSudahDibaca(); return
+    }
+    pengamatBaca = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { tandaiSudahDibaca(); break }
+      }
+    }, { root: thread, threshold: 0.6 })
+    pengamatBaca.observe(terakhir)
+  }
+
   // ── Muat thread ──
   // dariRealtime=true -> dipicu event realtime; JANGAN bangun ulang komposer
   // bila sudah ada (supaya posisi toggle & teks yang sedang diketik tak hilang).
@@ -183,6 +229,9 @@
   async function muat(dariRealtime = false) {
     elError.style.display = 'none'
     thread.style.display = 'block'
+    // Tiap muat ulang (termasuk dipicu realtime karena ada pesan baru),
+    // reset flag supaya pesan terbaru ikut ditandai saat terlihat lagi.
+    sudahTandaiSesiIni = false
 
     // Info anak (nama + kelas) — lewat tabel murid (RLS sudah batasi akses)
     const { data: murid, error: errMurid } = await supabase
@@ -212,6 +261,15 @@
       console.error('muat thread:', error); return
     }
 
+    // Waktu-baca TERAKHIR pihak lawan (untuk render ✓✓). NULL = belum dibaca.
+    // Gagal ambil status != thread rusak -> anggap null, tampil ✓ Terkirim.
+    let waktuBacaLawan = null
+    try {
+      const { data: ts, error: errBaca } =
+        await supabase.rpc('status_baca_thread', { p_murid_id: muridId })
+      if (!errBaca && ts) waktuBacaLawan = new Date(ts).getTime()
+    } catch (_) { /* abaikan; biarkan ✓ Terkirim */ }
+
     thread.innerHTML = ''
     pesanBolehBalasId = null
     adaPesan = pesan && pesan.length > 0
@@ -232,15 +290,32 @@
         baris.className = 'bubble-baris ' + (sayaPengirim ? 'kanan' : 'kiri')
         // Lencana "dibuka untuk dibalas" hanya di pesan guru yang boleh_balas
         const tampilKunci = !p.balas_dari_id && p.boleh_balas && peran === 'ortu'
+        // Status baca: hanya di bubble milik sendiri (kanan).
+        // ✓✓ Dibaca kalau pesan dibuat <= waktu-baca terbaru lawan.
+        let statusHtml = ''
+        if (sayaPengirim) {
+          const dibaca = waktuBacaLawan !== null &&
+            new Date(p.dibuat_pada).getTime() <= waktuBacaLawan
+          statusHtml = dibaca
+            ? '<div class="bubble-status dibaca">✓✓ Dibaca</div>'
+            : '<div class="bubble-status">✓ Terkirim</div>'
+        }
         baris.innerHTML = `
           <div class="bubble ${sayaPengirim ? 'kanan' : 'kiri'}">
             <div>${aman(p.isi)}</div>
             <div class="bubble-meta">${waktuRamah(p.dibuat_pada)}</div>
             ${tampilKunci ? '<div class="lencana-kunci">↩️ boleh dibalas</div>' : ''}
+            ${statusHtml}
           </div>`
         thread.appendChild(baris)
       })
       thread.scrollTop = thread.scrollHeight
+
+      // ── Tandai "dibaca" saat pesan TERAKHIR benar-benar terlihat di layar ──
+      // "Dibaca" = user scroll sampai bubble paling bawah masuk viewport
+      // (atau memang sudah di bawah saat thread dibuka). Bukan sekadar buka.
+      // root = #thread (container yang men-scroll). Tandai cukup sekali per muat.
+      pasangPengamatBaca()
 
       // MODEL A: yang menentukan = catatan DARI GURU yang PALING BARU.
       // Cari pesan guru terakhir di thread (pesan sudah urut lama->baru).
@@ -383,6 +458,7 @@
 
   function lepasRealtime() {
     if (chPesan) { supabase.removeChannel(chPesan); chPesan = null }
+    lepasPengamatBaca()
   }
   window.addEventListener('pagehide', lepasRealtime)
   window.addEventListener('beforeunload', lepasRealtime)

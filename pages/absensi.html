@@ -140,6 +140,9 @@
     .pjb-sakit { background: #FEF3C7; color: #92400E; }
     .pj-rentang { font-size: 12px; color: var(--teks-muted); margin-top: 4px; }
     .pj-alasan2 { font-size: 13px; color: var(--teks-utama); margin-top: 6px; line-height: 1.45; }
+    .pj-foto2 { font-size: 12px; margin-top: 6px; }
+    .pj-foto2 a { color: var(--teal-gelap); font-weight: 700; text-decoration: none; }
+    .pj-foto2-belum { font-size: 12px; margin-top: 6px; color: #DC2626; font-weight: 600; }
     .pj-tombol { display: flex; gap: 8px; margin-top: 10px; }
     .pj-tombol .btn { flex: 1; padding: 9px; font-size: 13px; }
   </style>
@@ -584,10 +587,26 @@
         </div>
         <div class="pj-rentang">📅 ${rentangPendek(p.tgl_dari, p.tgl_sampai)}</div>
         <div class="pj-alasan2">${p.alasan}</div>
+        ${p.jenis_izin === 'sakit'
+          ? (p.foto_path
+              ? `<div class="pj-foto2"><a href="#" data-foto="${p.foto_path}">📎 Lihat surat dokter</a></div>`
+              : `<div class="pj-foto2-belum">⚠️ Foto surat dokter belum dilampirkan</div>`)
+          : ''}
         <div class="pj-tombol">
           <button class="btn btn-outline btn-tolak">Tolak</button>
           <button class="btn btn-teal btn-setuju">Setujui</button>
         </div>`
+      const linkFoto = el.querySelector('[data-foto]')
+      if (linkFoto) {
+        linkFoto.addEventListener('click', async (e) => {
+          e.preventDefault()
+          const path = linkFoto.getAttribute('data-foto')
+          const { data: d, error: er } = await supabase
+            .storage.from('surat-dokter').createSignedUrl(path, 300)
+          if (er || !d?.signedUrl) { toast('Gagal membuka foto. Coba lagi ya.', 'error'); return }
+          window.open(d.signedUrl, '_blank')
+        })
+      }
       el.querySelector('.btn-setuju').addEventListener('click', () => putus(p, true))
       el.querySelector('.btn-tolak').addEventListener('click', () => putus(p, false))
       list.appendChild(el)

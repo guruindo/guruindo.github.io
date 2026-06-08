@@ -401,25 +401,25 @@
   // ── Bottom nav (beda warna per peran) ──
   const beranda = peran === 'guru' ? 'beranda-guru.html' : 'beranda-ortu.html'
   const absensiBtn = peran === 'guru'
-    ? `<button class="nav-item" onclick="window.location.href='absensi.html'"><span class="nav-icon">✅</span><span class="nav-label">Absensi</span></button>`
+    ? `<button class="nav-item" onclick="window.location.replace('absensi.html')"><span class="nav-icon">✅</span><span class="nav-label">Absensi</span></button>`
     : ''
   document.getElementById('bottom-nav').innerHTML = `<div class="bottom-nav-inner">
-    <button class="nav-item" onclick="window.location.href='${beranda}'">
+    <button class="nav-item" onclick="window.location.replace('${beranda}')">
       <span class="nav-icon">🏠</span><span class="nav-label">Beranda</span>
     </button>
     <button class="nav-item aktif">
       <span class="nav-icon">📢</span><span class="nav-label">Pengumuman</span>
     </button>
     ${absensiBtn}
-    <button class="nav-item" onclick="window.location.href='catatan-list.html'">
+    <button class="nav-item" onclick="window.location.replace('catatan-list.html')">
       <span class="nav-icon">💬</span><span class="nav-label">Catatan</span>
     </button>
-    <button class="nav-item" onclick="window.location.href='${beranda}'">
+    <button class="nav-item" onclick="window.location.replace('${beranda}')">
       <span class="nav-icon">👤</span><span class="nav-label">Profil</span>
     </button>
   </div>`
   document.getElementById('btn-kembali').addEventListener('click', () => {
-    window.location.href = beranda
+    window.location.replace(beranda)
   })
 
   })()

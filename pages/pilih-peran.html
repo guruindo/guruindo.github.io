@@ -162,6 +162,7 @@
 
     // Ambil nama dari metadata user atau dari localStorage (simpan saat daftar)
     const nama = user.user_metadata?.nama
+      || user.user_metadata?.full_name
       || localStorage.getItem('gi_nama_tmp')
       || 'Pengguna GuruIndo'
 

@@ -37,6 +37,14 @@
     </div>
   </div>
 
+  <script>
+    // Penjaga offline: kalau browser tahu pasti offline saat splash dimuat,
+    // langsung ke layar "Koneksi terputus". Mencegah splash muter selamanya
+    // karena import supabase.js (esm.sh) tak bisa diambil saat offline.
+    if (!navigator.onLine) {
+      window.location.href = 'offline.html'
+    }
+  </script>
   <script type="module" src="js/app.js"></script>
   <script>
     // Daftarkan service worker — syarat agar browser memunculkan prompt "Pasang"

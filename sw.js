@@ -1,5 +1,5 @@
 // ================================================================
-// GuruIndo — Service Worker v5
+// GuruIndo — Service Worker v6
 // ================================================================
 // Strategi:
 //   * Dokumen HTML (navigasi)  -> NETWORK-FIRST + timeout.
@@ -13,7 +13,7 @@
 //   * HANYA method GET yang ditangani (POST dll dibiarkan apa adanya).
 // ================================================================
 
-const CACHE = 'guruindo-v5'
+const CACHE = 'guruindo-v6'
 
 // Basis scope: otomatis benar di root domain ATAU subfolder GitHub Pages.
 const BASE = self.registration.scope
@@ -83,6 +83,17 @@ async function networkFirst(request) {
     }
     return res
   } catch (_) {
+    // OFFLINE. Untuk NAVIGASI halaman: JANGAN sajikan HTML dari cache,
+    // karena library (esm.sh) tak akan ter-load saat offline -> script
+    // halaman mati -> tampilan nyangkut "Memuat...". GuruIndo butuh
+    // internet untuk berfungsi, jadi tampilkan layar "Koneksi terputus"
+    // yang jelas. (request.mode === 'navigate' = user membuka halaman.)
+    if (request.mode === 'navigate') {
+      const offline = await caches.match(OFFLINE)
+      if (offline) return offline
+      return new Response('Offline', { status: 503, statusText: 'Offline' })
+    }
+    // Bukan navigasi (mis. prefetch): cache dulu, lalu offline.html.
     const cached = await caches.match(request)
     if (cached) return cached
     const offline = await caches.match(OFFLINE)
